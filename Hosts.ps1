@@ -8,7 +8,7 @@ Add-Type -Assembly System.IO.Compression.FileSystem
 Import-Module $PSScriptRoot\Elevate.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
-# capture variables for command elevation
+# ensure command elevation
 $command = $PSCommandPath
 $arguments = $PsBoundParameters.Values + $args
 
@@ -17,12 +17,17 @@ function Main
     switch ($verb)
     {
         "update" { Update }
+        "view" { View }
         "help" { ShowHelp }
         default { ShowHelp }
     }
+}
 
-    Write-Host "Press any key to exit..." -ForegroundColor Yellow
-    $null = $host.ui.rawui.readkey("NoEcho,IncludeKeyDown")
+function View
+{
+    $notepadPath = "$([Environment]::SystemDirectory)\notepad.exe"
+    $hostsPath = "$([Environment]::SystemDirectory)\drivers\etc\hosts"
+    Start-Process $notepadPath $hostsPath
 }
 
 function Update
@@ -53,6 +58,9 @@ function Update
     Remove-Item $hostsZipPath
 
     Write-Host "Success" -ForegroundColor Green
+
+    Write-Host "Press any key to exit..." -ForegroundColor Yellow
+    $null = $host.ui.rawui.readkey("NoEcho,IncludeKeyDown")    
 }
 
 function ShowHelp
