@@ -1,24 +1,29 @@
 # USAGE
 # Import-Module $PSScriptRoot\Elevate.psm1 -DisableNameChecking -Force
-# Ensure-Elevated $MyInvocation.MyCommand.Path
+# $command = $PSCommandPath
+# $arguments = $PsBoundParameters.Values + $args
+# Ensure-Elevated $command $arguments
 
 function Ensure-Elevated {
     [CmdletBinding()]
     param ( 
-        [string] $scriptPath
+        [string] $command,
+        [string[]] $arguments
     )
 
     if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
     {
         # relaunch as an elevated process:
         Write-Host "Requires elevation"
-        Start-Process powershell.exe "-File",('"{0}"' -f $scriptPath) -Verb RunAs
+        $arguments = ,"-File $($command)" + $arguments
+        Start-Process powershell.exe -Verb RunAs $arguments
         Exit
-    }
-    else
-    {
-        Write-Host "Already elevated"
     }
 }
 
+function Is-Elevated {
+    ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")
+}
+
 Export-ModuleMember -Function Ensure-Elevated
+Export-ModuleMember -Function Is-Elevated

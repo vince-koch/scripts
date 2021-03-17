@@ -409,16 +409,17 @@ function SyncToRegistry
     SetRegistryColor "ColorTable15" $currentScheme.brightWhite
 
     # match the opacity to the acrylic opacity of the default profile
+    [int] $windowAlpha = 255
     if ($settings.profiles.defaults.useAcrylic -eq $true)
     {
         [decimal] $multiplier = [decimal] $settings.profiles.defaults.acrylicOpacity
-        [int] $windowAlpha = 255 * $multiplier
-        
-        [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, "WindowAlpha", $windowAlpha)
+        $windowAlpha = 255 * $multiplier    
     }
 
+    [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, "WindowAlpha", $windowAlpha)
+
     # just set some more sensible defaults for window size
-    SetRegistrySize "WindowSize" 120 50
+    SetRegistrySize "WindowSize" 100 35
 }
 
 function SetRegistrySize
