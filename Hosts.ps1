@@ -67,6 +67,7 @@ function ShowHelp
 {
     Write-Host
     Write-Host "update            updates the hosts file"
+    Write-Host "view              opens the hosts file with notepad"
     Write-Host "help              displays this help screen"
 }
 
