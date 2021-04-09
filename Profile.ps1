@@ -1,3 +1,18 @@
+param (
+    [string] $verb = ""
+)
+
+if ($verb -eq "install") {
+    Write-Host "$($PSCommandPath) ==> $($profile)"
+    Copy-Item -Path "$($PSCommandPath)" -Destination "$($profile)"
+}
+
+if ($verb -eq "view") {
+    $notepadPath = "$([Environment]::SystemDirectory)\notepad.exe"
+    $profilePath = "$($profile)"
+    Start-Process $notepadPath $profilePath
+}
+
 # Installation
 # ------------
 # 1. Run the following command to see where to place this file: $profile
