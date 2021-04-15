@@ -97,6 +97,13 @@ function Main
         {
             SyncToRegistry
         }
+		
+		"download"
+		{
+			Write-Host "Download from one of the following locations:"
+            Write-Host "    https://www.atomcorp.dev/api/v1/themes"
+            Write-Host "    https://raw.githubusercontent.com/atomcorp/themes/master/themes.json"
+		}
 
         "interactive" { InteractiveMain }
         "help" { ShowHelp }
@@ -409,17 +416,16 @@ function SyncToRegistry
     SetRegistryColor "ColorTable15" $currentScheme.brightWhite
 
     # match the opacity to the acrylic opacity of the default profile
-    [int] $windowAlpha = 255
     if ($settings.profiles.defaults.useAcrylic -eq $true)
     {
         [decimal] $multiplier = [decimal] $settings.profiles.defaults.acrylicOpacity
-        $windowAlpha = 255 * $multiplier    
+        [int] $windowAlpha = 255 * $multiplier
+        
+        [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, "WindowAlpha", $windowAlpha)
     }
 
-    [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, "WindowAlpha", $windowAlpha)
-
     # just set some more sensible defaults for window size
-    SetRegistrySize "WindowSize" 100 35
+    SetRegistrySize "WindowSize" 120 50
 }
 
 function SetRegistrySize
