@@ -4,9 +4,9 @@
 // @version      0.1
 // @description  Lots of sites are asking about cookies these days.  I just want to read something real quick.
 // @author       You
-// @match        https://superuser.com/*
-// @match        https://stackoverflow.com/*
-// @match        https://stackexchange.com/*
+// @match        https://*.superuser.com/*
+// @match        https://*.stackoverflow.com/*
+// @match        https://*.stackexchange.com/*
 // @icon         https://www.google.com/s2/favicons?domain=superuser.com
 // @grant        none
 // ==/UserScript==
