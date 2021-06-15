@@ -66,10 +66,18 @@ function GetSolutionPath
         if ([System.IO.Directory]::Exists($searchPath))
         {
             [string[]] $files = [System.IO.Directory]::GetFiles($searchPath, "*.sln", [System.IO.SearchOption]::TopDirectoryOnly)
-            [string] $file = [System.Linq.Enumerable]::SingleOrDefault($files)
-            if ([string]::IsNullOrWhiteSpace($file) -eq $false)
+            if ($files.Length -eq 1)
             {
+                [string] $file = [System.Linq.Enumerable]::Single($files)
                 return $file
+            }
+            elseif ($files.Length -gt 1)
+            {
+                [string] $file = Console-Menu $files
+                if ([string]::IsNullOrWhiteSpace($file) -eq $false)
+                {
+                    return $file
+                }
             }
         }
     }

@@ -1,6 +1,12 @@
 param (
-    [string] $machineName = $null
+    [string] $machineName = $null,
+    [switch] $fullscreen = $false,
+    [switch] $multimon = $false
 )
+
+function ShowHelp() {
+    Write-Host "rdp [machineName] [-fullscreen] [-multimon]"
+}
 
 class Option
 {
@@ -117,6 +123,11 @@ class Option
     }
 }
 
+if ($machineName -eq "help" -or $machineName -eq "--help" -or $machineName -eq "/help" -or $machineName -eq "?") {
+    ShowHelp
+    exit
+}
+
 if ([System.String]::IsNullOrWhiteSpace($machineName)) {
     $machineName = Read-Host "machine name"
 }
@@ -124,5 +135,14 @@ if ([System.String]::IsNullOrWhiteSpace($machineName)) {
 if ([System.String]::IsNullOrWhiteSpace($machineName) -eq $false) {
     [Option[]] $options = [Option]::GetAll()
     [Option]::SetValue($options, "full address", $machineName)
+
+    if ($fullscreen -eq $true) {
+        [Option]::SetValue($options, "screen mode id", "2")       
+    }
+
+    if ($multimon -eq $true) {
+        [Option]::SetValue($options, "use multimon", "1")
+    }
+
     [Option]::LaunchRdp($options)
 }
