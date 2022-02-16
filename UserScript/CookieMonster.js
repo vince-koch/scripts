@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Cookie Monster
 // @namespace    http://tampermonkey.net/
-// @version      0.1
+// @version      0.2
 // @description  Lots of sites are asking about cookies these days.  I just want to read something real quick.
 // @author       You
-// @match        https://*.superuser.com/*
-// @match        https://*.stackoverflow.com/*
+// @match        https://*.askubuntu.com/*
 // @match        https://*.stackexchange.com/*
+// @match        https://*.stackoverflow.com/*
+// @match        https://*.superuser.com/*
 // @icon         https://www.google.com/s2/favicons?domain=superuser.com
 // @grant        none
 // ==/UserScript==
