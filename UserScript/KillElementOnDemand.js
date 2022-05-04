@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  Removes the element directly under the cursor when the hotkey CTRL + ~ is detected!
+// @version      0.2
+// @description  Removes the element directly under the cursor when the backtick (`) key is pressed!
 // @author       Vince Koch
 // @match        https://*/*
 // @match        http://*/*
