@@ -3,7 +3,7 @@
 // @description Adapt gitlab layout to wide screens. Please add your own domain if you use on-premise server
 // @author V1rgul (https://github.com/V1rgul)
 // @license CC BY-NC - Creative Commons Attribution-NonCommercial
-// @version 0.0.1.20200814213543
+// @version 0.1
 // @namespace https://greasyfork.org/users/676264
 // @grant GM_addStyle
 // @run-at document-start
@@ -107,9 +107,11 @@ let css = `
     margin-right: 32px;
   }
 `;
+  
 if (typeof GM_addStyle !== "undefined") {
   GM_addStyle(css);
-} else {
+}
+else {
   let styleNode = document.createElement("style");
   styleNode.appendChild(document.createTextNode(css));
   (document.querySelector("head") || document.documentElement).appendChild(styleNode);
