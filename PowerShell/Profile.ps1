@@ -2,45 +2,36 @@ param (
     [string] $verb = ""
 )
 
+# .\Profile.ps1 install ==> installs this file as the current user's $profile
 if ($verb -eq "install") {
     Write-Host "$($PSCommandPath) ==> $($profile)"
     Copy-Item -Path "$($PSCommandPath)" -Destination "$($profile)"
 }
 
+# .\Profile.ps1 view ==> opens this file in notepad.exe
 if ($verb -eq "view") {
     $notepadPath = "$([Environment]::SystemDirectory)\notepad.exe"
     $profilePath = "$($profile)"
     Start-Process $notepadPath $profilePath
 }
 
-# Installation
-# ------------
-# 1. Run the following command to see where to place this file: $profile
-# 2. Customize if desired
-#
-# Helpful Links
-# -------------
-# Basis for git prompt: https://stackoverflow.com/questions/1287718/how-can-i-display-my-current-git-branch-name-in-my-powershell-prompt
-# Explaining profiles: https://devblogs.microsoft.com/scripting/understanding-the-six-powershell-profiles/
-
-function Write-BranchName () {
-    try {
-        $branch = git rev-parse --abbrev-ref HEAD
-
-        if ($branch -eq "HEAD") {
-            # we're probably in detached HEAD state, so print the SHA
-            $branch = git rev-parse --short HEAD
-            Write-Host "[$branch] " -ForegroundColor Red -NoNewLine
-        }
-        else {
-            # we're on an actual branch, so print it
-            Write-Host "[$branch] " -ForegroundColor Blue -NoNewLine
-        }
-    }
-    catch {
-        # we'll end up here if we're in a newly initiated git repo
-        Write-Host "[*new-repo*] " -ForegroundColor Yellow -NoNewLine
-    }
+function Write-Colors {
+    Write-Host "Black" -ForegroundColor Black
+    Write-Host "Blue" -ForegroundColor Blue
+    Write-Host "Cyan" -ForegroundColor Cyan
+    Write-Host "DarkBlue" -ForegroundColor DarkBlue
+    Write-Host "DarkCyan" -ForegroundColor DarkCyan
+    Write-Host "DarkGray" -ForegroundColor DarkGray
+    Write-Host "DarkGreen" -ForegroundColor DarkGreen
+    Write-Host "DarkMagenta" -ForegroundColor DarkMagenta
+    Write-Host "DarkRed" -ForegroundColor DarkRed
+    Write-Host "DarkYellow" -ForegroundColor DarkYellow
+    Write-Host "Gray" -ForegroundColor Gray
+    Write-Host "Green" -ForegroundColor Green
+    Write-Host "Magenta" -ForegroundColor Magenta
+    Write-Host "Red" -ForegroundColor Red
+    Write-Host "White" -ForegroundColor White
+    Write-Host "Yellow" -ForegroundColor Yellow
 }
 
 function Get-TruncatedPath {
@@ -55,21 +46,72 @@ function Get-TruncatedPath {
     return $displayPath
 }
 
-function Prompt {
-    $base = "PS "
-    #$path = "$($executionContext.SessionState.Path.CurrentLocation)"
-    $path = Get-TruncatedPath
+function Write-GitBranchName {
+    try {
+        $branch = git rev-parse --abbrev-ref HEAD
 
-    Write-Host "`n$base" -NoNewline
-
-    if (Test-Path .git) {
-        Write-BranchName
-        Write-Host $path -NoNewLine        
+        if ($branch -eq "HEAD") {
+            # we're probably in detached HEAD state, so print the SHA
+            $branch = git rev-parse --short HEAD
+            Write-Host " ($branch)" -ForegroundColor Red -NoNewLine
+        }
+        elseif ($branch) {
+            # we're on an actual branch, so print it
+            Write-Host " ($branch)" -ForegroundColor Blue -NoNewLine
+        }
     }
-    else {
-        # we're not in a repo so don't bother displaying branch name/sha
-        Write-Host "$path" -NoNewLine
+	catch {
+        # we'll end up here if we're in a newly initiated git repo
+        Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
+    }
+}
+
+function Global:Prompt {
+	$lastCommandSuccess = $?
+    $lastCommand = Get-History -Count 1
+    $lastCommandRunTime = ($lastCommand.EndExecutionTime - $lastCommand.StartExecutionTime).TotalSeconds
+	
+    $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
+    $userName = [Security.Principal.WindowsIdentity]::GetCurrent().Name;
+    $computerName = $env:COMPUTERNAME
+    $folder = Split-Path -Path $pwd -Leaf
+    $timestamp = Get-Date -Format 'dddd hh:mm:ss tt'
+	$time = Get-Date -Format 'hh:mm:ss tt'
+	
+    Write-Host ""
+
+	# admin indicator
+    if ($isAdmin) {
+        Write-Host "Admin " -ForegroundColor Red -NoNewline
     }
 
-    return "> "
+	# username, computer name, current folder, and git branch
+    Write-Host "$userName" -ForegroundColor Green -NoNewLine
+    Write-Host " $computerName" -ForegroundColor DarkGray -NoNewLine
+    Write-Host " $pwd" -ForegroundColor Yellow -NoNewLine
+    Write-GitBranchName
+	
+	# duration of last command, and color indication of whether or not it failed
+	if ("$lastCommandRunTime".Length -gt 0) {
+		$x = $Host.UI.RawUI.WindowSize.Width - ("$lastCommandRunTime".Length + "$time".Length + 1)
+		$y = $Host.UI.RawUI.CursorPosition.Y
+		$Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
+		if ($lastCommandSuccess) {
+			Write-Host $lastCommandRunTime -ForegroundColor DarkGreen -NoNewLine
+		}
+		else {
+			Write-Host $lastCommandRunTime -ForegroundColor DarkRed -NoNewLine
+		}
+	}
+	
+	# current time
+	$x = $Host.UI.RawUI.WindowSize.Width - "$time".Length
+	$y = $Host.UI.RawUI.CursorPosition.Y
+	$Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y	
+	Write-Host $time -ForegroundColor DarkGray -NoNewLine
+	
+	# prompt
+	Write-Host ""
+	$rightArrow = [char]0x2192
+	return "PS> "
 }
