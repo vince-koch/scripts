@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    function addGlowStyle() {
+    function createGlowStyle() {
         const style = document.createElement("style");
         style.innerHTML = `
             .kill-glow {
@@ -25,30 +25,48 @@
 
         document.head.appendChild(style);
     }
-
-    addGlowStyle();
-
+    
     let glowingElement = null;
+
+    function addGlow(element) {
+        removeGlow();
+        
+        glowingElement = element;
+        glowingElement.classList.add("kill-glow");
+    }
+    
+    function removeGlow() {
+        if (glowingElement !== null) {
+            glowingElement.classList.remove("kill-glow");
+        }
+    }
+    
+    function killGlowingElement() {
+        if (glowingElement !== null) {
+            glowingElement.remove();
+            glowingElement = null;
+        }
+    }
+    
+    createGlowStyle();
 
     document.addEventListener("keydown", function onKeyDown(event) {
         if (event.ctrlKey === true && event.key === "`") {
-            if (glowingElement !== null) {
-                glowingElement.remove();
-                glowingElement = null;
-            }
+            killGlowingElement();
         }
         else if (event.ctrlKey === true) {
-            // remove glow from prior element
-            if (glowingElement !== null) {
-                glowingElement.classList.remove("kill-glow");
-            }
+            removeGlow();
 
-            // find the current element and give it a glow
             let elements = document.querySelectorAll(":hover");
             if (elements.length > 0) {
-                glowingElement = elements[elements.length - 1];
-                glowingElement.classList.add("kill-glow");
+                addGlow(elements[elements.length - 1]);
             }
         }
     });
+    
+    document.addEventListener("keydown", function onKeyDown(event) {
+        if (event.ctrlKey === true) {
+            removeGlow();
+        }
+    }
 })();
