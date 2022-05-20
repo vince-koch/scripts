@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  Highlights the element directly under the cursor when the CTRL is pressed, and kills it when CTRL+` is pressed!
 // @author       Vince Koch
 // @match        https://*/*
@@ -25,48 +25,66 @@
 
         document.head.appendChild(style);
     }
-    
+
+	let lastMouseEvent = null;
     let glowingElement = null;
 
     function addGlow(element) {
-        removeGlow();
-        
-        glowingElement = element;
-        glowingElement.classList.add("kill-glow");
+		if (glowingElement !== null && glowingElement !== element) {
+			removeGlow();
+		}
+		
+		if (glowingElement !== element) {
+			glowingElement = element;
+			glowingElement.classList.add("kill-glow");
+		}
     }
-    
+
     function removeGlow() {
         if (glowingElement !== null) {
             glowingElement.classList.remove("kill-glow");
+			glowingElement = null;
         }
     }
-    
+
     function killGlowingElement() {
         if (glowingElement !== null) {
+			console.warn("killing ", glowingElement);
+
             glowingElement.remove();
             glowingElement = null;
         }
     }
-    
-    createGlowStyle();
 
-    document.addEventListener("keydown", function onKeyDown(event) {
-        if (event.ctrlKey === true && event.key === "`") {
-            killGlowingElement();
+	function onMouseMove(event) {
+		lastMouseEvent = event;
+	}
+	
+    function onKeyDown(event) {	
+		if (event.key === "Control") {
+			let hoverElement = document.elementFromPoint(lastMouseEvent.clientX, lastMouseEvent.clientY);
+			
+			if (hoverElement !== null) {
+				addGlow(hoverElement);
+			}
+			else {
+				removeGlow();
+			}
         }
-        else if (event.ctrlKey === true) {
-            removeGlow();
+		else if (event.key === "`" && event.ctrlKey === true) {
+			event.preventDefault();
+			killGlowingElement();
+        }
+    }
 
-            let elements = document.querySelectorAll(":hover");
-            if (elements.length > 0) {
-                addGlow(elements[elements.length - 1]);
-            }
-        }
-    });
-    
-    document.addEventListener("keydown", function onKeyDown(event) {
-        if (event.ctrlKey === true) {
+    function onKeyUp(event) {
+        if (event.key === "Control") {
             removeGlow();
         }
     }
+
+    createGlowStyle();
+	document.addEventListener("mousemove", e => onMouseMove(e));
+    document.addEventListener("keydown", e => onKeyDown(e));
+    document.addEventListener("keyup", e => onKeyUp(e));
 })();
