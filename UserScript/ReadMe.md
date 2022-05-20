@@ -7,4 +7,4 @@
 * https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/RemoveGoogleSearchAds.js
 
 ### Icon
-https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
+* https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
