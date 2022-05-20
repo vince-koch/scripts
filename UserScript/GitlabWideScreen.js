@@ -3,7 +3,7 @@
 // @description Adapt gitlab layout to wide screens. Please add your own domain if you use on-premise server
 // @author V1rgul (https://github.com/V1rgul)
 // @license CC BY-NC - Creative Commons Attribution-NonCommercial
-// @version 0.1
+// @version 0.2
 // @namespace https://greasyfork.org/users/676264
 // @grant GM_addStyle
 // @run-at document-start
@@ -11,6 +11,7 @@
 // @match https://gitlab.com/*
 // @match http://*.gitlab.com/*
 // @match https://*.gitlab.com/*
+// @icon https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // ==/UserScript==
 
 (function() {
