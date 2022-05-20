@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.8
-// @description  Highlights the element directly under the cursor when the CTRL is pressed, and kills it when CTRL+` is pressed!
+// @version      0.9
+// @description  (CTRL+`) = enter/exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
 // @match        http://*/*
@@ -12,6 +12,10 @@
 
 (function() {
     'use strict';
+
+    let _isTargeting = false;
+	let _lastMouseEvent = null;
+    let _glowingElement = null;
 
     function createGlowStyle() {
         const style = document.createElement("style");
@@ -26,65 +30,58 @@
         document.head.appendChild(style);
     }
 
-	let lastMouseEvent = null;
-    let glowingElement = null;
-
-    function addGlow(element) {
-		if (glowingElement !== null && glowingElement !== element) {
-			removeGlow();
-		}
-		
-		if (glowingElement !== element) {
-			glowingElement = element;
-			glowingElement.classList.add("kill-glow");
-		}
-    }
-
-    function removeGlow() {
-        if (glowingElement !== null) {
-            glowingElement.classList.remove("kill-glow");
-			glowingElement = null;
+    function updateGlow() {
+        function removeGlow() {
+            if (_glowingElement !== null) {
+                _glowingElement.classList.remove("kill-glow");
+                _glowingElement = null;
+            }
         }
-    }
 
-    function killGlowingElement() {
-        if (glowingElement !== null) {
-			console.warn("killing ", glowingElement);
-
-            glowingElement.remove();
-            glowingElement = null;
-        }
-    }
-
-	function onMouseMove(event) {
-		lastMouseEvent = event;
-	}
-	
-    function onKeyDown(event) {	
-		if (event.key === "Control") {
-			let hoverElement = document.elementFromPoint(lastMouseEvent.clientX, lastMouseEvent.clientY);
-			
-			if (hoverElement !== null) {
-				addGlow(hoverElement);
-			}
-			else {
-				removeGlow();
-			}
-        }
-		else if (event.key === "`" && event.ctrlKey === true) {
-			event.preventDefault();
-			killGlowingElement();
-        }
-    }
-
-    function onKeyUp(event) {
-        if (event.key === "Control") {
+        function addGlow(element) {
             removeGlow();
+            _glowingElement = hoverElement;
+            _glowingElement.classList.add("kill-glow");
+        }
+
+        let hoverElement = document.elementFromPoint(_lastMouseEvent.clientX, _lastMouseEvent.clientY);
+
+        if (!_isTargeting) {
+            removeGlow();
+        }
+        else if (_glowingElement !== hoverElement) {
+            removeGlow();
+
+            if (hoverElement !== null) {
+                addGlow(hoverElement);
+            }
+        }
+    }
+
+    function onMouseMove(event) {
+		_lastMouseEvent = event;
+        updateGlow();
+	}
+
+    function onKeyDown(event) {
+        console.info("onKeyDown ::: ", event);
+
+        if (event.key === "`") {
+            event.preventDefault();
+
+            if (event.ctrlKey === true) {
+                _isTargeting = !_isTargeting;
+                updateGlow();
+            }
+            else if (_isTargeting && _glowingElement !== null) {
+                _glowingElement.remove();
+                _glowingElement = null;
+                updateGlow();
+            }
         }
     }
 
     createGlowStyle();
 	document.addEventListener("mousemove", e => onMouseMove(e));
     document.addEventListener("keydown", e => onKeyDown(e));
-    document.addEventListener("keyup", e => onKeyUp(e));
 })();
