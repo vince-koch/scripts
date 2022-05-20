@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.6
+// @version      0.7
 // @description  Highlights the element directly under the cursor when the CTRL is pressed, and kills it when CTRL+` is pressed!
 // @author       Vince Koch
 // @match        https://*/*
 // @match        http://*/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=tampermonkey.net
+// @icon         https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // @grant        none
 // ==/UserScript==
 
