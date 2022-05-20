@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  Highlights the element directly under the cursor when the CTRL is pressed, and kills it when CTRL+` is pressed!
 // @author       Vince Koch
 // @match        https://*/*
