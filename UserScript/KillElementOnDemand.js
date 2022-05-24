@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.9
+// @version      0.10
 // @description  (CTRL+`) = enter/exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -59,29 +59,28 @@
     }
 
     function onMouseMove(event) {
-		_lastMouseEvent = event;
+        _lastMouseEvent = event;
         updateGlow();
-	}
+    }
 
     function onKeyDown(event) {
-        console.info("onKeyDown ::: ", event);
-
         if (event.key === "`") {
-            event.preventDefault();
-
             if (event.ctrlKey === true) {
                 _isTargeting = !_isTargeting;
                 updateGlow();
+                event.preventDefault();
             }
             else if (_isTargeting && _glowingElement !== null) {
                 _glowingElement.remove();
                 _glowingElement = null;
                 updateGlow();
+                event.preventDefault();
             }
         }
     }
 
     createGlowStyle();
-	document.addEventListener("mousemove", e => onMouseMove(e));
+    document.addEventListener("mousemove", e => onMouseMove(e));
     document.addEventListener("keydown", e => onKeyDown(e));
+    console.info('Kill Element On Demand ==> ', { "CTRL+`": "Toggle targeting", "`": "Kill targeted element" });
 })();
