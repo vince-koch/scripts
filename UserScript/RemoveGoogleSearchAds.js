@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Remove Google Search Ads
 // @namespace    http://tampermonkey.net/
-// @version      0.7
+// @version      0.8
 // @description  Remove ads from Google search results
 // @author       vince-koch
 // @match        https://www.google.com/*
@@ -13,25 +13,25 @@
 // @license      MIT
 // ==/UserScript==
 
-function removeAdsById(elementId) {
-    var element = document.getElementById(elementId)
-    if (element) {
-        //element.remove();
-        const message = "GoogleRemoveAds: Removed ads (" + elementId + ")"
-
-        const div = document.createElement("h4");
-        const divContent = document.createTextNode(message)
-        div.appendChild(divContent);
-        div.style.color = "red";
-        element.parentNode.replaceChild(div, element)
-
-        console.warn(message)
-    }
-}
-
 (function() {
     'use strict';
 
+    function removeAdsById(elementId) {
+        var element = document.getElementById(elementId)
+        if (element) {
+            //element.remove();
+            const message = "GoogleRemoveAds: Removed ads (" + elementId + ")"
+
+            const div = document.createElement("h4");
+            const divContent = document.createTextNode(message)
+            div.appendChild(divContent);
+            div.style.color = "red";
+            element.parentNode.replaceChild(div, element)
+
+            console.warn(message)
+        }
+    }
+    
     console.warn("GoogleRemoveAds: looking for ads")
     removeAdsById("tads")
     removeAdsById("bottomads")
