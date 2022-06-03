@@ -5,6 +5,7 @@
 // @description  Remove ads from Google search results
 // @author       vince-koch
 // @match        https://www.google.com/*
+// @icon         https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // @grant        none
 // @run-at       document-end
 // @compatible   firefox >=52
