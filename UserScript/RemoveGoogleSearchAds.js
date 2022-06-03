@@ -8,8 +8,6 @@
 // @icon         https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // @grant        none
 // @run-at       document-end
-// @compatible   firefox >=52
-// @compatible   chrome >=55
 // @license      MIT
 // ==/UserScript==
 
@@ -20,19 +18,19 @@
         var element = document.getElementById(elementId)
         if (element) {
             //element.remove();
-            const message = "GoogleRemoveAds: Removed ads (" + elementId + ")"
+            const message = "RemoveGoogleSearchAds.js: Removed ads (" + elementId + ")";
 
             const div = document.createElement("h4");
-            const divContent = document.createTextNode(message)
+            const divContent = document.createTextNode(message);
             div.appendChild(divContent);
             div.style.color = "red";
-            element.parentNode.replaceChild(div, element)
+            element.parentNode.replaceChild(div, element);
 
-            console.warn(message)
+            console.warn(message);
         }
     }
     
-    console.warn("GoogleRemoveAds: looking for ads")
-    removeAdsById("tads")
-    removeAdsById("bottomads")
+    console.warn("RemoveGoogleSearchAds.js");
+    removeAdsById("tads");
+    removeAdsById("bottomads");
 })();
