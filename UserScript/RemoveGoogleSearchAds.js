@@ -1,12 +1,16 @@
 // ==UserScript==
 // @name         Remove Google Search Ads
 // @namespace    http://tampermonkey.net/
-// @version      0.5
+// @version      0.6
 // @description  Remove ads from Google search results
-// @author       You
+// @author       vince-koch
 // @match        https://www.google.com/*
 // @icon         https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // @grant        none
+// @run-at       document-end
+// @compatible   firefox >=52
+// @compatible   chrome >=55
+// @license      MIT
 // ==/UserScript==
 
 function removeAdsById(elementId) {
