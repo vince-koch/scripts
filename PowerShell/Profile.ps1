@@ -34,16 +34,82 @@ function Write-Colors {
     Write-Host "Yellow" -ForegroundColor Yellow
 }
 
-function Get-TruncatedPath {
-    $dirSep = [IO.Path]::DirectorySeparatorChar
-    $pathComponents = $PWD.Path.Split($dirSep)
-    $displayPath = if ($pathComponents.Count -le 3) {
-        $PWD.Path
-    } else {
-        "...{0}{1}" -f $dirSep, ($pathComponents[-2,-1] -join $dirSep)
+function IndentTabsToSpaces([string] $path, [int] $spacesPerTab = 4) {
+    [string] $indent = $(" " * $spacesPerTab)
+    [string[]] $lines = [System.IO.File]::ReadAllLines($path)
+
+    for ($i = 0; $i -lt $lines.Length; $i++) {
+        $line = $lines[$i]
+        $trimmed = $line.TrimStart()
+        $start = $line.SubString(0, $line.Length - $trimmed.Length).Replace("`t", $indent)
+        $lines[$i] = $start + $trimmed
     }
 
-    return $displayPath
+    [System.IO.File]::WriteAllLines($path, $lines)
+}
+
+function SheBang {
+    param (
+        [Parameter(Mandatory=$true, Position=0)]
+        [ValidateNotNullOrEmpty()]
+        [string] $filename,
+
+        [Parameter(Mandatory=$True, Position = 1, ValueFromRemainingArguments=$true)]
+        [string[]] $arguments
+    )
+
+    [string] $shebang = "#! "
+
+    if ([System.IO.File]::Exists($filename) -eq $false) {
+        Write-Host "File [$filename] does not exist" -ForegroundColor Red
+        return 1
+    }
+
+    [string] $first = Get-Content $filename -First 1
+    if ($first.StartsWith($shebang) -eq $false) {
+        Write-Host "File [$filename] did not begin with the shebang sequence [$shebang]" -ForegroundColor Red
+        return 1
+    }
+
+    [string] $command = $first.Substring($shebang.Length)
+    if ([string]::IsNullOrWhiteSpace($command)) {
+        Write-Host "File [$filename] began with the shebang sequence but did not contain an instruction" -ForegroundColor Red
+        return 1
+    }
+
+    Write-Host $command $arguments  -ForegroundColor DarkGray
+    $startProcessParams = @{
+        FilePath               = $command
+        ArgumentList           = $arguments
+        Wait                   = $true;
+        PassThru               = $true;
+        NoNewWindow            = $true;
+    }
+
+    $cmd = Start-Process @startProcessParams
+    return $cmd.ExitCode
+}
+
+Set-Alias -Name sb -Value SheBang
+
+class TimeSpanUtils {
+    static [string] ToHumanLong([TimeSpan] $timeSpan) {
+        [string] $result = ""
+        if ($timeSpan.Days -gt 0) { $result = "$result $(Floor($timeSpan.TotalDays))d" }
+        if ($timeSpan.Hours -gt 0) { $result = "$result $($timeSpan.Hours)h" }
+        if ($timeSpan.Minutes -gt 0) { $result = "$result $($timeSpan.Minutes)m" }
+        if ($timeSpan.Seconds -gt 0) { $result = "$result $($timeSpan.Seconds)s" }
+        if ($timeSpan.Milliseconds -gt 0) { $result = "$result $($timeSpan.Milliseconds)ms" }
+        return $result.Trim()
+    }
+
+    static [string] ToHumanShort([TimeSpan] $timeSpan) {
+        if ($timeSpan.Days -gt 0) { return "$(Floor($timeSpan.TotalDays)) days" }
+        elseif ($timeSpan.Hours -gt 0) { return "$($timeSpan.Hours) hours" }
+        elseif ($timeSpan.Minutes -gt 0) { return "$($timeSpan.TotalMinutes) minutes" }
+        elseif ($timeSpan.Seconds -gt 0) { return "$($timeSpan.Seconds) seconds" }
+        else { return "$($timeSpan.Milliseconds) ms" }
+    }
 }
 
 function Write-GitBranchName {
@@ -60,58 +126,59 @@ function Write-GitBranchName {
             Write-Host " ($branch)" -ForegroundColor Blue -NoNewLine
         }
     }
-	catch {
+    catch {
         # we'll end up here if we're in a newly initiated git repo
         Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
     }
 }
 
 function Global:Prompt {
-	$lastCommandSuccess = $?
+    $lastCommandSuccess = $?
     $lastCommand = Get-History -Count 1
-    $lastCommandRunTime = ($lastCommand.EndExecutionTime - $lastCommand.StartExecutionTime).TotalSeconds
-	
+    $lastCommandRunTime = [TimeSpanUtils]::ToHumanShort($lastCommand.EndExecutionTime - $lastCommand.StartExecutionTime)
+
     $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     $userName = [Security.Principal.WindowsIdentity]::GetCurrent().Name;
     $computerName = $env:COMPUTERNAME
     $folder = Split-Path -Path $pwd -Leaf
     $timestamp = Get-Date -Format 'dddd hh:mm:ss tt'
-	$time = Get-Date -Format 'hh:mm:ss tt'
-	
+    $time = Get-Date -Format 'hh:mm:ss tt'
+
     Write-Host ""
 
-	# admin indicator
+    # admin indicator
     if ($isAdmin) {
         Write-Host "Admin " -ForegroundColor Red -NoNewline
     }
 
-	# username, computer name, current folder, and git branch
+    # username, computer name, current folder, and git branch
     Write-Host "$userName" -ForegroundColor Green -NoNewLine
     Write-Host " $computerName" -ForegroundColor DarkGray -NoNewLine
     Write-Host " $pwd" -ForegroundColor Yellow -NoNewLine
     Write-GitBranchName
-	
-	# duration of last command, and color indication of whether or not it failed
-	if ("$lastCommandRunTime".Length -gt 0) {
-		$x = $Host.UI.RawUI.WindowSize.Width - ("$lastCommandRunTime".Length + "$time".Length + 1)
-		$y = $Host.UI.RawUI.CursorPosition.Y
-		$Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
-		if ($lastCommandSuccess) {
-			Write-Host $lastCommandRunTime -ForegroundColor DarkGreen -NoNewLine
-		}
-		else {
-			Write-Host $lastCommandRunTime -ForegroundColor DarkRed -NoNewLine
-		}
-	}
-	
-	# current time
-	$x = $Host.UI.RawUI.WindowSize.Width - "$time".Length
-	$y = $Host.UI.RawUI.CursorPosition.Y
-	$Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y	
-	Write-Host $time -ForegroundColor DarkGray -NoNewLine
-	
-	# prompt
-	Write-Host ""
-	$rightArrow = [char]0x2192
-	return "PS> "
+
+    # duration of last command, and color indication of whether or not it failed
+    if ("$lastCommandRunTime".Length -gt 0) {
+        $x = $Host.UI.RawUI.WindowSize.Width - ("$lastCommandRunTime".Length + "$time".Length + 1)
+        $y = $Host.UI.RawUI.CursorPosition.Y
+        $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
+
+        if ($lastCommandSuccess) {
+            Write-Host $lastCommandRunTime -ForegroundColor DarkGreen -NoNewLine
+        }
+        else {
+            Write-Host $lastCommandRunTime -ForegroundColor DarkRed -NoNewLine
+        }
+    }
+
+    # current time
+    $x = $Host.UI.RawUI.WindowSize.Width - "$time".Length
+    $y = $Host.UI.RawUI.CursorPosition.Y
+    $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
+    Write-Host $time -ForegroundColor DarkGray -NoNewLine
+
+    # prompt
+    Write-Host ""
+    $rightArrow = [char]0x2192
+    return "PS> "
 }
