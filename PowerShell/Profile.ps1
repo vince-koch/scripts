@@ -2,17 +2,38 @@ param (
     [string] $verb = ""
 )
 
-# .\Profile.ps1 install ==> installs this file as the current user's $profile
 if ($verb -eq "install") {
+    # .\Profile.ps1 install ==> installs this file as the current user's $profile
     Write-Host "$($PSCommandPath) ==> $($profile)"
     Copy-Item -Path "$($PSCommandPath)" -Destination "$($profile)"
 }
+elseif ($verb -eq "view") {
+    # .\Profile.ps1 view ==> opens this file in notepad.exe
+    [Profile]::View()
+}
 
-# .\Profile.ps1 view ==> opens this file in notepad.exe
-if ($verb -eq "view") {
-    $notepadPath = "$([Environment]::SystemDirectory)\notepad.exe"
-    $profilePath = "$($profile)"
-    Start-Process $notepadPath $profilePath
+class Profile {
+    static [void] Update() {
+        $updateUrl = "https://github.com/vince-koch/scripts/blob/main/PowerShell/Profile.ps1"
+        $profilePath = [Profile]::GetProfilePath()
+        $webClient = New-Object System.Net.WebClient
+        $webClient.DownloadFile($updateUrl, $profilePath)
+    }
+
+    static [void] View() {
+        $notepadPath = "$([Environment]::SystemDirectory)\notepad.exe"
+        $profilePath = [Profile]::GetProfilePath()
+        Start-Process $notepadPath $profilePath
+    }
+
+    static [string] GetProfilePath() {
+        [string] $profile = [System.IO.Path]::Combine( `
+            [Environment]::GetFolderPath("MyDocuments"), `
+            "WindowsPowerShell", `
+            "Microsoft.PowerShell_profile.ps1")
+
+        return $profile
+    }
 }
 
 function Write-Colors {
