@@ -13,11 +13,22 @@ elseif ($verb -eq "view") {
 }
 
 class Profile {
+    static [void] Reload() {
+        $profilePath = [Profile]::GetProfilePath()
+        & $profilePath
+        Write-Host "Profile reloaded"
+    }
+
     static [void] Update() {
         $updateUrl = "https://github.com/vince-koch/scripts/blob/main/PowerShell/Profile.ps1"
         $profilePath = [Profile]::GetProfilePath()
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($updateUrl, $profilePath)
+        Write-Host "Success! " -ForegroundColor Green -NoNewLine
+        Write-Host "Your profile located at [" -NoNewLine
+        Write-Host $profilePath -ForegroundColor Cyan
+        Write-Host "] has been updated"
+        & $profilePath
     }
 
     static [void] View() {
@@ -55,7 +66,7 @@ function Write-Colors {
     Write-Host "Yellow" -ForegroundColor Yellow
 }
 
-function IndentTabsToSpaces([string] $path, [int] $spacesPerTab = 4) {
+function Indent-Tabs-To-Spaces([string] $path, [int] $spacesPerTab = 4) {
     [string] $indent = $(" " * $spacesPerTab)
     [string[]] $lines = [System.IO.File]::ReadAllLines($path)
 
@@ -68,6 +79,8 @@ function IndentTabsToSpaces([string] $path, [int] $spacesPerTab = 4) {
 
     [System.IO.File]::WriteAllLines($path, $lines)
 }
+
+Set-Alias -Name t2s -Value Indent-Tabs-To-Spaces
 
 function SheBang {
     param (
