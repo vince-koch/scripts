@@ -5,7 +5,7 @@ param (
 if ($verb -eq "install") {
     # .\Profile.ps1 install ==> installs this file as the current user's $profile
     Write-Host "$($PSCommandPath) ==> $($profile)"
-    Copy-Item -Path "$($PSCommandPath)" -Destination "$($profile)"
+    Copy-Item -Path "$($PSCommandPath)" -Destination "$($profile)" -Force
 }
 elseif ($verb -eq "view") {
     # .\Profile.ps1 view ==> opens this file in notepad.exe
@@ -22,13 +22,22 @@ class Profile {
     static [void] Update() {
         $updateUrl = "https://github.com/vince-koch/scripts/blob/main/PowerShell/Profile.ps1"
         $profilePath = [Profile]::GetProfilePath()
+		$profileDirectory = [System.IO.Path]::GetDirectoryName($profilePath)
+		
+		# ensure folder exists
+		[System.IO.Directory]::CreateDirectory($profileDirectory)
+		
+		# download the file
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($updateUrl, $profilePath)
-        Write-Host "Success! " -ForegroundColor Green -NoNewLine
+        
+		# message
+		Write-Host "Success! " -ForegroundColor Green -NoNewLine
         Write-Host "Your profile located at [" -NoNewLine
         Write-Host $profilePath -ForegroundColor Cyan
         Write-Host "] has been updated"
-        & $profilePath
+        
+		[Profile]::Reload()
     }
 
     static [void] View() {
@@ -161,8 +170,14 @@ function Write-GitBranchName {
         }
     }
     catch {
-        # we'll end up here if we're in a newly initiated git repo
-        Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
+		if ("$error".StartsWith("The term 'git' is not recognized")) {
+			# we don't have git - or it's not on path
+			Write-Host " (git not found!)" -ForegroundColor Red -NoNewLine
+		}
+		else {		
+			# we'll end up here if we're in a newly initiated git repo
+			Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
+		}
     }
 }
 
