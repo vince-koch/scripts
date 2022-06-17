@@ -20,7 +20,7 @@ class Profile {
     }
 
     static [void] Update() {
-        $updateUrl = "https://github.com/vince-koch/scripts/blob/main/PowerShell/Profile.ps1"
+        $updateUrl = "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Profile.ps1"
         $profilePath = [Profile]::GetProfilePath()
 		$profileDirectory = [System.IO.Path]::GetDirectoryName($profilePath)
 		
