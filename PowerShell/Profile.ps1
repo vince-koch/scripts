@@ -22,22 +22,21 @@ class Profile {
     static [void] Update() {
         $updateUrl = "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Profile.ps1"
         $profilePath = [Profile]::GetProfilePath()
-		$profileDirectory = [System.IO.Path]::GetDirectoryName($profilePath)
-		
-		# ensure folder exists
-		[System.IO.Directory]::CreateDirectory($profileDirectory)
-		
-		# download the file
+        $profileDirectory = [System.IO.Path]::GetDirectoryName($profilePath)
+        
+        # ensure folder exists
+        [System.IO.Directory]::CreateDirectory($profileDirectory)
+        
+        # download the file
         $webClient = New-Object System.Net.WebClient
         $webClient.DownloadFile($updateUrl, $profilePath)
         
-		# message
-		Write-Host "Success! " -ForegroundColor Green -NoNewLine
-        Write-Host "Your profile located at [" -NoNewLine
-        Write-Host $profilePath -ForegroundColor Cyan
-        Write-Host "] has been updated"
+        # message
+        Write-Host "Success! " -ForegroundColor Green -NoNewLine
+        Write-Host $profilePath -ForegroundColor Cyan -NoNewLine
+        Write-Host " has been updated"
         
-		[Profile]::Reload()
+        [Profile]::Reload()
     }
 
     static [void] View() {
@@ -170,14 +169,14 @@ function Write-GitBranchName {
         }
     }
     catch {
-		if ("$error".StartsWith("The term 'git' is not recognized")) {
-			# we don't have git - or it's not on path
-			Write-Host " (git not found!)" -ForegroundColor Red -NoNewLine
-		}
-		else {		
-			# we'll end up here if we're in a newly initiated git repo
-			Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
-		}
+        if ("$error".StartsWith("The term 'git' is not recognized")) {
+            # we don't have git - or it's not on path
+            Write-Host " (git not found!)" -ForegroundColor Red -NoNewLine
+        }
+        else {		
+            # we'll end up here if we're in a newly initiated git repo
+            Write-Host " (no branches yet)" -ForegroundColor Yellow -NoNewLine
+        }
     }
 }
 
