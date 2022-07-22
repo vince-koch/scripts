@@ -135,6 +135,62 @@ function SheBang {
 
 Set-Alias -Name sb -Value SheBang
 
+function git-branch {
+    # get a list of branches
+    [array] $branches = @( git branch )
+    if ($branches.Length -eq 0) {
+        return
+    }
+
+    # clean up our list
+    [int] $currentBranchIndex = -1
+
+    Write-Host "Available Branches:" -ForegroundColor Cyan
+    for ($i = 0; $i -lt $branches.Length; $i++) {
+        $branches[$i] = $branches[$i].Trim()
+        if ($branches[$i].StartsWith("* ")) {
+            $branches[$i] = $branches[$i].SubString(2)
+            $currentBranchIndex = $i
+        }
+
+		$color = "Gray"
+		if ($currentBranchIndex -eq $i) {
+			$color = "Green"
+		}
+		
+		$index = "$($i + 1)".PadLeft(4)
+		Write-Host "$($index): $($branches[$i]) " -ForegroundColor $color        
+    }
+
+	Write-Host "Select Branch: " -ForegroundColor Yellow -NoNewLine
+    $choice = Read-Host
+    $branchIndex = $choice -as [int]
+
+    # if they didn't enter a valid number then we're done here
+    if ($branchIndex -eq $null) {
+        Write-Host "Cancelled" -ForegroundColor Red
+        return
+    }
+
+    # decrement to align user selection with zero based indexing
+    $branchIndex = $branchIndex - 1
+
+    # make sure user selection is within valid range
+    if ($branchIndex -lt 0 -or $branchIndex -ge $branches.Length) {
+        Write-Host "Invalid selection" -ForegroundColor Red
+        return
+    }
+
+    # if they're already on the correct branch, do nothing
+    if ($branchIndex -eq $currentBranchIndex) {
+        return
+    }
+
+    # they asked to change branches, so do it
+    Write-Host ""
+    git checkout $branches[$branchIndex]
+}
+
 class TimeSpanUtils {
     static [string] ToHumanLong([TimeSpan] $timeSpan) {
         [string] $result = ""
