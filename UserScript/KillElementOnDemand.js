@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.10
+// @version      0.11
 // @description  (CTRL+`) = enter/exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -76,6 +76,11 @@
                 updateGlow();
                 event.preventDefault();
             }
+        }
+        else if (event.key === "Escape" && _isTargeting) {
+                _isTargeting = !_isTargeting;
+                updateGlow();
+                event.preventDefault();
         }
     }
 
