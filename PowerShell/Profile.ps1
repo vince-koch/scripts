@@ -321,3 +321,16 @@ function Global:Prompt {
     Write-Host "$GLYPH_PROMPT" -ForegroundColor Cyan -NoNewLine
     return " "
 }
+
+Set-Alias -Name unzip -Value Expand-Archive
+
+function npp {
+	for ($i = 0; $i -lt $args.Length; $i++) {
+		if ($args[$i].IndexOf(' ') -gt -1 -and -not $args[$i].StartsWith('"')) {
+			$args[$i] = "`"$($args[$i])`""
+		}
+	}
+	
+	$exe = "C:\Program Files\Notepad++\notepad++.exe"
+	Start-Process -FilePath $exe -ArgumentList $args
+}
