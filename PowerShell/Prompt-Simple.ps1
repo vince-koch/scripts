@@ -1,5 +1,5 @@
-# This script can be installed by executing the following at any powershell prompt
-# Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Profile-Simple.ps1" -OutFile "$profile"
+# This script can be installed by executing the following at any powershell prompt, and then reopening powershell
+# Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Prompt-Simple.ps1" -OutFile "$profile"
 
 function Write-GitBranchName() {
     try {

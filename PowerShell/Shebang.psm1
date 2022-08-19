@@ -1,3 +1,6 @@
+# USAGE
+# Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
+
 function Shebang {
 	param (
 		[Parameter(Mandatory=$true, Position=0)]
@@ -41,3 +44,5 @@ function Shebang {
 }
 
 Set-Alias -Name sb -Value Shebang
+
+Export-ModuleMember -Function Shebang -Alias sb
