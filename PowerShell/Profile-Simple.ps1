@@ -43,8 +43,8 @@ function Global:Prompt {
     Write-GitBranchName
 
     # prompt
-    Write-Host " > " -ForegroundColor Cyan -NoNewLine
+    Write-Host " >" -ForegroundColor Cyan -NoNewLine
     
-	# return
+    # return
     return " "
 }
