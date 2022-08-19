@@ -1,3 +1,6 @@
+# This script can be installed by executing the following at any powershell prompt
+# Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Profile-Simple.ps1" -OutFile "$profile"
+
 function Write-GitBranchName() {
     try {
         $branch = git rev-parse --abbrev-ref HEAD
@@ -46,6 +49,6 @@ function Global:Prompt {
     # prompt
     Write-Host ">" -ForegroundColor Blue -NoNewLine
     
-	# return
+    # need to return a non-null, non-empty string to avoid PS>
     return " "
 }
