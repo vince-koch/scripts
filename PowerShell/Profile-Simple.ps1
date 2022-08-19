@@ -37,7 +37,7 @@ function Global:Prompt {
     # current folder
     #$folder = Split-Path -Path $pwd -Leaf
     $folder = $pwd
-    Write-Host " $folder" -ForegroundColor Yellow -NoNewLine
+    Write-Host "$folder" -ForegroundColor Yellow -NoNewLine
 
     # git branch
     Write-GitBranchName
