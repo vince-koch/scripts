@@ -29,8 +29,8 @@ function Write-GitBranchName() {
 
 function Global:Prompt {
     Write-Host ""
-	Write-Host "PS " -ForegroundColor Blue -NoNewLine
-	
+    Write-Host "PS " -ForegroundColor Blue -NoNewLine
+
     # admin indicator
     $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     if ($isAdmin) {
