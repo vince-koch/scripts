@@ -51,5 +51,8 @@ function Git-ChangeBranch {
     }
 }
 
-Export-ModuleMember -Function Git-CreateBranch
-Export-ModuleMember -Function Git-ChangeBranch
+Set-Alias -Name git-create-branch -Value Git-CreateBranch
+Set-Alias -Name git-change-branch -Value Git-ChangeBranch
+
+Export-ModuleMember -Function Git-CreateBranch -Alias git-create-branch
+Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch

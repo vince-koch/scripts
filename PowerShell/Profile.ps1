@@ -328,12 +328,27 @@ function Global:Prompt {
 Set-Alias -Name unzip -Value Expand-Archive
 
 function npp {
+    [string[]] $exePaths = $(
+	    "C:\Program Files\Notepad++\notepad++.exe",
+        "C:\Program Files (x86)\Notepad++\notepad++.exe"
+    )
+
+    [string] $exe = $exePaths | Where { [System.IO.File]::Exists($_) }
+    if ($exe -eq $null) {
+        Write-Error "Unable to find path where notepad++.exe is installed" -ForegroundColor Red
+        return -1
+    }
+
 	for ($i = 0; $i -lt $args.Length; $i++) {
 		if ($args[$i].IndexOf(' ') -gt -1 -and -not $args[$i].StartsWith('"')) {
 			$args[$i] = "`"$($args[$i])`""
 		}
 	}
 	
-	$exe = "C:\Program Files\Notepad++\notepad++.exe"
-	Start-Process -FilePath $exe -ArgumentList $args
+	if ($args.Length -gt 0) {
+        Start-Process -FilePath $exe -ArgumentList $args
+    }
+    else {
+        Start-Process -FilePath $exe
+    }
 }
