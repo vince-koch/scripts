@@ -9,7 +9,7 @@ function Write-GitBranchName() {
         }
         elseif ($branch) {
             # we're on an actual branch, so print it
-            Write-Host " ($branch)" -ForegroundColor Blue -NoNewLine
+            Write-Host " ($branch)" -ForegroundColor Magenta -NoNewLine
         }
     }
     catch {
@@ -26,7 +26,8 @@ function Write-GitBranchName() {
 
 function Global:Prompt {
     Write-Host ""
-
+	Write-Host "PS " -ForegroundColor Blue -NoNewLine
+	
     # admin indicator
     $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
     if ($isAdmin) {
@@ -37,14 +38,14 @@ function Global:Prompt {
     # current folder
     #$folder = Split-Path -Path $pwd -Leaf
     $folder = $pwd
-    Write-Host "$folder" -ForegroundColor Yellow -NoNewLine
+    Write-Host "$folder" -ForegroundColor Cyan -NoNewLine
 
     # git branch
     Write-GitBranchName
 
     # prompt
-    Write-Host " >" -ForegroundColor Cyan -NoNewLine
+    Write-Host ">" -ForegroundColor Blue -NoNewLine
     
-    # return
+	# return
     return " "
 }
