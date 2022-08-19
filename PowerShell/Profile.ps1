@@ -1,3 +1,6 @@
+# This script can be installed by executing the following at any powershell prompt
+# Invoke-WebRequest -Uri "https://raw.githubusercontent.com/vince-koch/scripts/main/PowerShell/Profile.ps1" -OutFile "$profile"
+
 param (
     [string] $verb = ""
 )
