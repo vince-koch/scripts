@@ -13,11 +13,11 @@ class TimeSpanUtils {
     }
 
     static [string] ToHumanShort([TimeSpan] $timeSpan) {
-        if ($timeSpan.Days -gt 0) { return "$(Floor($timeSpan.TotalDays)) days" }
-        elseif ($timeSpan.Hours -gt 0) { return "$($timeSpan.TotalHours) hours" }
-        elseif ($timeSpan.Minutes -gt 0) { return "$($timeSpan.TotalMinutes) minutes" }
-        elseif ($timeSpan.Seconds -gt 0) { return "$($timeSpan.TotalSeconds) seconds" }
-        else { return "$($timeSpan.TotalMilliseconds) ms" }
+        if ($timeSpan.Days -gt 0) { return "$(Floor($timeSpan.TotalDays.ToString("0.###"))) d" }
+        elseif ($timeSpan.Hours -gt 0) { return "$($timeSpan.TotalHours.ToString("0.###")) h" }
+        elseif ($timeSpan.Minutes -gt 0) { return "$($timeSpan.TotalMinutes.ToString("0.###")) m" }
+        elseif ($timeSpan.Seconds -gt 0) { return "$($timeSpan.TotalSeconds.ToString("0.###")) s" }
+        else { return "$($timeSpan.TotalMilliseconds.ToString("0.###")) ms" }
     }
 }
 
