@@ -39,31 +39,31 @@ function Console-Confirm {
 
 function Console-Menu {
     param (
-        [array] $menuItems, 
+        [array] $menuItems,
         [switch] $ReturnIndex = $false,
         [switch] $MultiSelect = $false,
         [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green,
         [int] $Index = 0
     )
-    
+
     $selection = @()
-    
+
     # prevent cursor flickering
     [console]::CursorVisible=$false
-    
+
     if ($menuItems.Length -gt 0)
     {
         # initial draw of the menu, and calculation of the top
         Console-MenuDraw $menuItems $Index $MultiSelect $selection $ActiveColor
         $cur_pos = [System.Console]::CursorTop - $menuItems.Length
 
-        # loop 
+        # loop
         $vkeycode = 0
         while ($vkeycode -ne 13 -and $vkeycode -ne 27)
         {
             $press = $host.ui.rawui.readkey("NoEcho,IncludeKeyDown")
             $vkeycode = $press.virtualkeycode
-            
+
             # up down and toggle select
             if ($vkeycode -eq 38) { $Index-- }
             if ($vkeycode -eq 40) { $Index++ }
@@ -72,14 +72,14 @@ function Console-Menu {
             # constrain to top and bottom
             if ($Index -lt 0) { $Index = 0 }
             if ($Index -ge $menuItems.length) { $Index = $menuItems.length -1 }
-            
+
             # escape
-            if ($vkeycode -eq 27) 
+            if ($vkeycode -eq 27)
             {
                 $Index = -1
                 $selection = $null
             }
-            
+
             # retdraw menu
             if ($vkeycode -ne 27)
             {
@@ -88,11 +88,11 @@ function Console-Menu {
             }
         }
     }
-    else 
+    else
     {
         $Index = $null
     }
-    
+
     [console]::CursorVisible=$true
 
     if ($ReturnIndex -eq $false -and $Index -ne -1)
@@ -101,18 +101,18 @@ function Console-Menu {
         {
             return $menuItems[$selection]
         }
-        else 
+        else
         {
             return $menuItems[$Index]
         }
     }
-    else 
+    else
     {
         if ($MultiSelect)
         {
             return $selection
         }
-        else 
+        else
         {
             return $Index
         }
@@ -121,9 +121,9 @@ function Console-Menu {
 
 function Console-MenuDraw {
     param ($menuItems, $menuPosition, $MultiSelect, $selection, $ActiveColor)
-    
+
     $l = $menuItems.length
-    for ($i = 0; $i -le $l;$i++) 
+    for ($i = 0; $i -le $l;$i++)
     {
         if ($menuItems[$i] -ne $null)
         {
@@ -134,17 +134,17 @@ function Console-MenuDraw {
                 {
                     $item = '[x] ' + $item
                 }
-                else 
+                else
                 {
                     $item = '[ ] ' + $item
                 }
             }
-            
-            if ($i -eq $menuPosition) 
+
+            if ($i -eq $menuPosition)
             {
                 Write-Host "> $($item)" -ForegroundColor $ActiveColor
-            } 
-            else 
+            }
+            else
             {
                 Write-Host "  $($item)"
             }
@@ -153,18 +153,18 @@ function Console-MenuDraw {
 }
 
 function Console-MenuToggleSelection {
-    param ($pos, [array]$selection)
-    
+    param ($pos, [array] $selection)
+
     if ($selection -contains $pos)
-    { 
-        $result = $selection | where {$_ -ne $pos}
+    {
+        [string[]] $result = $selection | where {$_ -ne $pos}
     }
-    else 
+    else
     {
         $selection += $pos
-        $result = $selection
+        [string[]] $result = $selection
     }
-    
+
     return $result
 }
 

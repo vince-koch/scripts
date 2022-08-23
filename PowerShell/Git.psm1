@@ -39,6 +39,7 @@ function Git-ChangeBranch {
     # get a list of branches
     [array] $branches = @( git branch )
     if ($branches.Length -eq 0) {
+        Write-Host "No git branches found?" -ForegroundColor Red
         return
     }
 
@@ -46,13 +47,52 @@ function Git-ChangeBranch {
     $branches = $branches | ForEach-Object { $_.Trim(" *") }
 
     $selectedIndex = Console-Menu $branches -Index $currentIndex -ReturnIndex
-    if ($selectedIndex -gt -1 -and $selectedIndex -ne $currentIndex) {
+    if ($selectedIndex -eq -1) {
+        Write-Host "User cancelled" -ForegroundColor Red
+        return
+    }
+    elseif ($selectedIndex -eq $currentIndex) {
+        Write-Host "Already on selected branch" -ForegroundColor Red
+        return
+    }
+    else {
         git checkout $branches[$selectedIndex]
+    }
+}
+
+function Git-DeleteBranches {
+    # get a list of branches
+    [array] $branches = @( git branch )
+    if ($branches.Length -eq 0) {
+        Write-Host "No git branches found?" -ForegroundColor Red
+        return
+    }
+
+    $branches = $branches | ForEach-Object { $_.Trim(" *") }
+
+    [string[]] $selectedBranches = Console-Menu $branches -MultiSelect
+
+    if ($selectedBranches.Length -eq 0) {
+        Write-Host "No branches selected" -ForegroundColor Red
+        return
+    }
+
+    $confirm = Console-Confirm -Prompt "Are you sure you want to delete $($selectedBranches.Length) branches [y/N]? " -Default $false
+    if ($confirm -ne $true) {
+        Write-Host "User cancelled" -ForegroundColor Red
+        return
+    }
+
+    foreach ($selectedBranch in $selectedBranches) {
+        git branch -D "$selectedBranch"
     }
 }
 
 Set-Alias -Name git-create-branch -Value Git-CreateBranch
 Set-Alias -Name git-change-branch -Value Git-ChangeBranch
+Set-Alias -Name git-delete-branch -Value Git-DeleteBranches
+Set-Alias -Name git-delete-branches -Value Git-DeleteBranches
 
 Export-ModuleMember -Function Git-CreateBranch -Alias git-create-branch
 Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch
+Export-ModuleMember -Function Git-DeleteBranches -Alias git-delete-branch, git-delete-branches
