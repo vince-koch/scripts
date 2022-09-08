@@ -46,17 +46,22 @@ function Git-ChangeBranch {
     [int] $currentIndex = [Array]::FindIndex($branches, [Predicate[String]] { param($s) $s.StartsWith("*") })
     $branches = $branches | ForEach-Object { $_.Trim(" *") }
 
-    $selectedIndex = Console-Menu $branches -Index $currentIndex -ReturnIndex
-    if ($selectedIndex -eq -1) {
+    $menu = Console-CreateMenu
+    $menu.Items = $branches
+    $menu.CurrentIndex = $currentIndex
+    $menu.TitleColor = [System.ConsoleColor]::Red
+    $selectedBranch = $menu.Run()
+
+    if ($selectedBranch -eq $null) {
         Write-Host "User cancelled" -ForegroundColor Red
         return
     }
-    elseif ($selectedIndex -eq $currentIndex) {
+    elseif ($selectedBranch -eq $branches[$currentIndex]) {
         Write-Host "Already on selected branch" -ForegroundColor Red
         return
     }
     else {
-        git checkout $branches[$selectedIndex]
+        git checkout $selectedBranch
     }
 }
 

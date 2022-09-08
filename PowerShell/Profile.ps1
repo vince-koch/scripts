@@ -24,6 +24,7 @@ Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Prompt-Default.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
 function Global:Prompt {
 	return Prompt-Default

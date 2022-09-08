@@ -37,136 +37,262 @@ function Console-Confirm {
     return $result
 }
 
-function Console-Menu {
-    param (
-        [array] $menuItems,
-        [switch] $ReturnIndex = $false,
-        [switch] $MultiSelect = $false,
-        [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green,
-        [int] $Index = 0
-    )
+class Menu
+{
+    [string] $Title = $null
 
-    $selection = @()
+    [array] $Items
+    [boolean] $IgnoreEscape = $false
+    [boolean] $IsMultiSelect = $false
+    
+    [int] $CurrentIndex = 0
+    [array] $SelectedIndexes = @()
+    [boolean] $WasExitRequested = $false
 
-    # prevent cursor flickering
-    [console]::CursorVisible=$false
+    [System.ConsoleColor] $TitleColor = [System.ConsoleColor]::Cyan
+    [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green
 
-    if ($menuItems.Length -gt 0)
+    [array] Run()
     {
-        # initial draw of the menu, and calculation of the top
-        Console-MenuDraw $menuItems $Index $MultiSelect $selection $ActiveColor
-        $cur_pos = [System.Console]::CursorTop - $menuItems.Length
-
-        # loop
-        $vkeycode = 0
-        while ($vkeycode -ne 13 -and $vkeycode -ne 27)
+        if ($this.Items -eq $null -or $this.Items.Length -eq 0)
         {
-            $press = $host.ui.rawui.readkey("NoEcho,IncludeKeyDown")
-            $vkeycode = $press.virtualkeycode
-
-            # up down and toggle select
-            if ($vkeycode -eq 38) { $Index-- }
-            if ($vkeycode -eq 40) { $Index++ }
-            if ($press.Character -eq ' ') { $selection = Console-MenuToggleSelection $Index $selection }
-
-            # constrain to top and bottom
-            if ($Index -lt 0) { $Index = 0 }
-            if ($Index -ge $menuItems.length) { $Index = $menuItems.length -1 }
-
-            # escape
-            if ($vkeycode -eq 27)
-            {
-                $Index = -1
-                $selection = $null
-            }
-
-            # retdraw menu
-            if ($vkeycode -ne 27)
-            {
-                [System.Console]::SetCursorPosition(0, $cur_pos)
-                Console-MenuDraw $menuItems $Index $MultiSelect $selection $ActiveColor
-            }
+            throw "Can not invoke Menu.Run() while Menu.Items is null or empty"
         }
-    }
-    else
-    {
-        $Index = $null
+
+        [System.Console]::CursorVisible = $false
+        $this.CurrentIndex = [System.Math]::Max($this.CurrentIndex, 0)
+        $this.SelectedIndexes = @()
+        $this.WasExitRequested = $false
+        
+        $this.Draw($false)
+        while ($this.WasExitRequested -eq $false)
+        {
+            $this.HandleKey()
+            $this.Draw($true)
+        }
+
+        [System.Console]::CursorVisible = $true
+        $result = $this.CalculateResult()
+        return $result
     }
 
-    [console]::CursorVisible=$true
-
-    if ($ReturnIndex -eq $false -and $Index -ne -1)
+    [void] Draw([boolean] $resetCursorPosition)
     {
-        if ($MultiSelect)
-        {
-            return $menuItems[$selection]
-        }
-        else
-        {
-            return $menuItems[$Index]
-        }
-    }
-    else
-    {
-        if ($MultiSelect)
-        {
-            return $selection
-        }
-        else
-        {
-            return $Index
-        }
-    }
-}
+        # ansi codes
+        $Esc = [char]27
+        $ClearLine = "$Esc[2K"
 
-function Console-MenuDraw {
-    param ($menuItems, $menuPosition, $MultiSelect, $selection, $ActiveColor)
+        $titleLine = $( if ([string]::IsNullOrWhiteSpace($this.Title)) { 0 } else { 1 } )
 
-    $l = $menuItems.length
-    for ($i = 0; $i -le $l;$i++)
-    {
-        if ($menuItems[$i] -ne $null)
+        # calculate items to render and reset cursor position if requested to do so
+        $renderCount = [System.Math]::Min($this.Items.Length + $titleLine, [System.Console]::WindowHeight - 1) 
+        if ($resetCursorPosition)
         {
-            $item = $menuItems[$i]
-            if ($MultiSelect)
+            [System.Console]::CursorTop = [System.Console]::CursorTop - $renderCount
+        }
+
+        if ($titleLine -gt 0)
+        {
+            Write-Host $this.Title -ForegroundColor $this.TitleColor
+            $renderCount -= $titleLine
+        }
+
+        # calculate the appropriate start start index
+        $startIndex = 0
+        if ($renderCount -lt $this.Items.Length)
+        {
+            $renderMid = [System.Math]::Floor($renderCount / 2)
+
+            if ($this.CurrentIndex -lt $this.Items.Length - $renderMid)
             {
-                if ($selection -contains $i)
-                {
-                    $item = '[x] ' + $item
-                }
-                else
-                {
-                    $item = '[ ] ' + $item
-                }
-            }
-
-            if ($i -eq $menuPosition)
-            {
-                Write-Host "> $($item)" -ForegroundColor $ActiveColor
+                $startIndex = [System.Math]::Max($this.CurrentIndex - $renderMid, 0)
             }
             else
             {
-                Write-Host "  $($item)"
+                $startIndex = $this.Items.Length - $renderCount
+            }
+        }
+
+        $endIndex = $startIndex + $renderCount
+        
+        for ($i = $startIndex; $i -lt $endIndex; $i++)
+        {
+            if ($this.Items[$i] -ne $null)
+            {
+                $item = $this.Items[$i]
+                if ($this.IsMultiSelect)
+                {
+                    if ($this.SelectedIndexes -contains $i)
+                    {
+                        $item = '[x] ' + $item
+                    }
+                    else
+                    {
+                        $item = '[ ] ' + $item
+                    }
+                }
+
+                if ($i -eq $this.CurrentIndex)
+                {
+                    Write-Host "$($ClearLine)> $($item)" -ForegroundColor $this.ActiveColor
+                }
+                else
+                {
+                    Write-Host "$($ClearLine)  $($item)"
+                }
             }
         }
     }
+
+    [void] HandleKey()
+    {
+        $breakAsInput = [System.Console]::TreatControlCAsInput
+        [System.Console]::TreatControlCAsInput = $true
+        $keyinfo = [System.Console]::ReadKey($true)
+        [System.Console]::TreatControlCAsInput = $breakAsInput
+
+        # ctrl+c
+        if ($keyinfo.Modifiers -band [System.ConsoleModifiers]::Control -and $keyinfo.Key -eq [System.ConsoleKey]::C)
+        {
+            $this.CurrentIndex = -1
+            $this.SelectedIndexes = $null
+            $this.WasExitRequested = $true
+        }
+
+        # up arrow
+        if ($keyinfo.Key -eq [System.ConsoleKey]::UpArrow)
+        {
+            $this.CurrentIndex = [System.Math]::Max($this.CurrentIndex - 1, 0)
+        }
+
+        # down arrow
+        if ($keyinfo.Key -eq [System.ConsoleKey]::DownArrow) 
+        {
+            $this.CurrentIndex = [System.Math]::Min($this.CurrentIndex + 1, $this.Items.Length - 1)
+        }
+        
+        # enter
+        if ($keyinfo.Key -eq [System.ConsoleKey]::Enter)
+        {
+            $this.WasExitRequested = $true
+        }
+
+        # escape
+        if ($this.IgnoreEscape -eq $false -and $keyinfo.Key -eq [System.ConsoleKey]::Escape)
+        {
+            $this.CurrentIndex = -1
+            $this.SelectedIndexes = $null
+            $this.WasExitRequested = $true
+        }
+
+        # space
+        if ($this.IsMultiSelect -and $keyinfo.Key -eq [System.ConsoleKey]::Space)
+        {
+            if ($this.SelectedIndexes  -contains $this.CurrentIndex)
+            {
+                $this.SelectedIndexes = $this.SelectedIndexes | Where { $_ -ne $this.CurrentIndex }
+            }
+            else
+            {
+                $this.SelectedIndexes += $this.CurrentIndex
+            }
+        }
+    }
+
+    [array] CalculateResult()
+    {
+        # escape was pressed, return null
+        if ($this.CurrentIndex -eq -1)
+        {
+            return $null
+        }
+
+        # single select
+        if ($this.IsMultiSelect -eq $false)
+        {
+            return $this.Items[$this.CurrentIndex]
+        }
+
+        # multi-select, convert selected indexes to selected items
+        $ordered = $this.SelectedIndexes | Sort { $_ }
+        $result = $this.Items[$ordered]
+        return $result
+    }
 }
 
-function Console-MenuToggleSelection {
-    param ($pos, [array] $selection)
+function Console-Menu {
+    param (
+        [array] $Items,
+        [string] $Title = $null,
+        [switch] $IsMultiSelect = $false,
+        [switch] $IgnoreEscape = $false,
+        [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green,
+        [System.ConsoleColor] $TitleColor = [System.ConsoleColor]::Cyan
+    )
 
-    if ($selection -contains $pos)
-    {
-        [string[]] $result = $selection | where {$_ -ne $pos}
-    }
-    else
-    {
-        $selection += $pos
-        [string[]] $result = $selection
-    }
+    $menu = [Menu]::new()
+    $menu.Items = $Items
+    $menu.Title = $Title
+    $menu.IsMultiSelect = $IsMultiSelect
+    $menu.IgnoreEscape = $IgnoreEscape
+    $menu.ActiveColor = $ActiveColor
+    $menu.TitleColor = $TitleColor
+
+    $result = $menu.Run()
 
     return $result
 }
 
+function Console-CreateMenu {
+    return [Menu]::new()
+}
+
+function Console-RunTests {
+    $wasExitRequested = $false
+    while ($wasExitRequested -eq $false) {
+        Write-Host ""
+        
+        $mainMenuResult = Console-Menu -Title "Main Menu" -Items @("Confirm", "Menu", "Menu (Multi-Select)", "Menu (Ignore Escape)", "Exit")
+
+        $subMenuTitle = "Select Fruit:  [$mainMenuResult]"
+        $subMenuItems = $( "apple", "apricot", "banana", "blackberry", "cantelope", "cherry", "dragonfruit", "grape", "grapefruit", "kiwi", "lime", "mango", "orange", "peach", "pear", "pineapple", "raspberry", "strawberry", "tomatoe" )
+
+        switch ($mainMenuResult) {
+            "Confirm" {
+
+            }
+
+            "Menu" {
+                $result = Console-Menu -Title $subMenuTitle -Items $subMenuItems
+                Write-Host "Selected: $($result)" -ForegroundColor Yellow
+            }
+
+            "Menu (Multi-Select)" {
+                $result = Console-Menu -Title $subMenuTitle -Items $subMenuItems -IsMultiSelect -TitleColor DarkMagenta
+                Write-Host "Selected: $($result)" -ForegroundColor Yellow
+            }
+
+            "Menu (Ignore Escape)" {
+                $result = Console-Menu -Title $subMenuTitle -Items $subMenuItems -IsMultiSelect -IgnoreEscape
+                Write-Host "Selected: $($result)" -ForegroundColor Yellow
+            }
+
+            "Exit" {
+                $wasExitRequested = $true
+            }
+
+            $null { # ESC
+                $wasExitRequested = $true
+            }
+
+            default {
+                Write-Host "MainMenu unrecognized selection [$mainMenuResult]" -ForegroundColor Red
+            }
+        }
+    }
+}
+
 Export-ModuleMember -Function Console-Confirm
 Export-ModuleMember -Function Console-Menu
+Export-ModuleMember -Function Console-CreateMenu
+Export-ModuleMember -Function Console-RunTests
