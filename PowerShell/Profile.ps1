@@ -29,3 +29,23 @@ Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 function Global:Prompt {
 	return Prompt-Default
 }
+
+try {
+    Push-Location $PSScriptRoot
+    Write-Host "Running " -ForegroundColor DarkGray -NoNewLine
+    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Magenta -NoNewLine
+
+    $branch = Git-GetBranchName
+    if ($branch) {
+        Write-Host " branch " -ForegroundColor DarkGray -NoNewLine
+        Write-Host "$branch" -ForegroundColor Cyan -NoNewLine
+
+        $commitDate = Git-GetCommitDate
+        Write-Host " updated " -ForegroundColor DarkGray -NoNewLine
+        Write-Host "$commitDate" -ForegroundColor Blue -NoNewLine
+    }
+}
+finally {
+    Write-Host ""
+    Pop-Location
+}

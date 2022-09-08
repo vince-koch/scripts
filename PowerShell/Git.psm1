@@ -93,6 +93,35 @@ function Git-DeleteBranches {
     }
 }
 
+function Git-GetBranchName {
+    try {
+        $branch = git rev-parse --abbrev-ref HEAD
+        if ($branch -eq "HEAD") {
+            $branch = git rev-parse --short HEAD
+        }
+
+        if ($branch) {
+            return $branch
+        }
+    }
+    catch {
+        if ("$error".StartsWith("The term 'git' is not recognized")) {
+            throw "Please ensure git can be found on your PATH"
+        }
+    }
+
+    return $null
+}
+
+function Git-GetCommitDate() {
+    if (Git-GetBranchName) {
+        $commitDate = git show -s --format=%ci
+        return $commitDate
+    }
+    
+    return $null
+}
+
 Set-Alias -Name git-create-branch -Value Git-CreateBranch
 Set-Alias -Name git-change-branch -Value Git-ChangeBranch
 Set-Alias -Name git-delete-branch -Value Git-DeleteBranches
@@ -101,3 +130,5 @@ Set-Alias -Name git-delete-branches -Value Git-DeleteBranches
 Export-ModuleMember -Function Git-CreateBranch -Alias git-create-branch
 Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch
 Export-ModuleMember -Function Git-DeleteBranches -Alias git-delete-branch, git-delete-branches
+Export-ModuleMember -Function Git-GetBranchName
+Export-ModuleMember -Function Git-GetCommitDate
