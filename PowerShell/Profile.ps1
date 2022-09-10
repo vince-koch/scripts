@@ -20,28 +20,40 @@ function Write-Colors {
 Set-Alias -Name unzip -Value Expand-Archive
 
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
+#Import-Module $PSScriptRoot\Move-WindowsToScreen.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Prompt-Default.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
+# add $PSScriptRoot to the path, and some aliases for loose ps1 files
+$env:Path += ";$PSScriptRoot"
+Set-Alias -Name move-windows -Value Move-WindowsToScreen
+Set-Alias -Name move-to-screen -Value Move-WindowsToScreen
+
+# set prompt
 function Global:Prompt {
 	return Prompt-Default
 }
 
+# welcome message
 try {
+    Write-Host "PowerShell Version $($Host.Version.ToString())" -ForegroundColor DarkGray
+
     Push-Location $PSScriptRoot
-    Write-Host "Running " -ForegroundColor DarkGray -NoNewLine
-    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Magenta -NoNewLine
+    #Write-Host "Running " -ForegroundColor DarkGray -NoNewLine
+    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -NoNewLine
 
     $branch = Git-GetBranchName
     if ($branch) {
-        Write-Host " branch " -ForegroundColor DarkGray -NoNewLine
+        #Write-Host " branch " -ForegroundColor DarkGray -NoNewLine
+        Write-Host " / " -ForegroundColor DarkGray -NoNewLine
         Write-Host "$branch" -ForegroundColor Cyan -NoNewLine
 
         $commitDate = Git-GetCommitDate
-        Write-Host " updated " -ForegroundColor DarkGray -NoNewLine
+        #Write-Host " updated " -ForegroundColor DarkGray -NoNewLine
+        Write-Host " / " -ForegroundColor DarkGray -NoNewLine
         Write-Host "$commitDate" -ForegroundColor Blue -NoNewLine
     }
 }
