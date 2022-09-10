@@ -189,6 +189,14 @@ namespace MoveWindows
         {
             Screen screen = null;
 
+            if (Screen.AllScreens.Length < 2)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("ERROR: You do not have multiple monitors attached?");
+                Console.ResetColor();
+                return;
+            }
+
             if (args.Length == 1)
             {
                 screen = SelectScreenFromInput(args[0]);
