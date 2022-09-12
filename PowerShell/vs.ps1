@@ -5,6 +5,11 @@ param (
 Import-Module $PSScriptRoot\Linq.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
+$Versions = @{}
+$Versions.Add("17", "2022")
+$Versions.Add("16", "2019")
+$Versions.Add("15", "2017")
+
 function Main
 {
     [string] $solutionPath = GetSolutionPath
@@ -85,6 +90,8 @@ function GetSolutionPath
     throw "Unable to locate solution file"
 }
 
+
+
 function GetVersionFromSolution
 {
     param ( [string] $solutionPath )
@@ -98,11 +105,7 @@ function GetVersionFromSolution
             | Linq-Select {$_.Substring($_.LastIndexOf(' ')).Trim()} `
             | Linq-Single
 		
-        $versionYearLookup = @{}
-        $versionYearLookup.Add("16", "2019")
-        $versionYearLookup.Add("15", "2017")
-
-        $year = $versionYearLookup[$version]
+        $year = $Versions[$version]
 
         return $year
     }
@@ -117,10 +120,8 @@ function FindMatchingDevEnvPath {
 
     [string[]] $years = (
         $requestedVersion,
-        $solutionVersion,
-        "2019",
-        "2017"
-    )
+        $solutionVersion
+    ) + $Versions.Values | Sort -Descending
 
     $devEnvPath = GetDevEnvPath $years
     Write-Host "   VS DevEnv Path: " -ForegroundColor DarkGray -NoNewline
@@ -139,6 +140,7 @@ function GetDevEnvPath
     )
     
     [string[]] $editions = (
+        "Enterprise",
         "Professional",
         "Community"
     )

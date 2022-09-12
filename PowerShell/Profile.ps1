@@ -32,6 +32,11 @@ $env:Path += ";$PSScriptRoot"
 Set-Alias -Name move-windows -Value Move-WindowsToScreen
 Set-Alias -Name move-to-screen -Value Move-WindowsToScreen
 
+function Which {
+    param ([string] $command)
+    (get-command $command).Path
+}
+
 # set prompt
 function Global:Prompt {
 	return Prompt-Default
@@ -42,17 +47,14 @@ try {
     Write-Host "PowerShell Version $($Host.Version.ToString())" -ForegroundColor DarkGray
 
     Push-Location $PSScriptRoot
-    #Write-Host "Running " -ForegroundColor DarkGray -NoNewLine
     Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -NoNewLine
 
     $branch = Git-GetBranchName
     if ($branch) {
-        #Write-Host " branch " -ForegroundColor DarkGray -NoNewLine
         Write-Host " / " -ForegroundColor DarkGray -NoNewLine
         Write-Host "$branch" -ForegroundColor Cyan -NoNewLine
 
         $commitDate = Git-GetCommitDate
-        #Write-Host " updated " -ForegroundColor DarkGray -NoNewLine
         Write-Host " / " -ForegroundColor DarkGray -NoNewLine
         Write-Host "$commitDate" -ForegroundColor Blue -NoNewLine
     }
