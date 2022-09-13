@@ -252,6 +252,7 @@ function Console-Menu {
         [switch] $IsMultiSelect = $false,
         [switch] $IgnoreEscape = $false,
         [switch] $ReturnIndex = $false,
+        [int] $CurrentIndex = -1,
         [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green,
         [System.ConsoleColor] $TitleColor = [System.ConsoleColor]::Cyan
     )
@@ -263,6 +264,7 @@ function Console-Menu {
     $menu.IsMultiSelect = $IsMultiSelect
     $menu.IgnoreEscape = $IgnoreEscape
     $menu.ReturnIndex = $ReturnIndex
+    $menu.CurrentIndex = $CurrentIndex
     $menu.ActiveColor = $ActiveColor
     $menu.TitleColor = $TitleColor
 

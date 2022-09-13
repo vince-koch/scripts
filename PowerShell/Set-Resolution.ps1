@@ -186,7 +186,7 @@ function Screen-Select
 {
     param ([RECT] $rect)
 
-    $screens = [System.Windows.Forms.Screen]::AllScreens | Sort-Object {$_.Bounds.X}
+    $screens = [System.Windows.Forms.Screen]::AllScreens
     if ($screens.Length -eq 1)
     {
         return $screens[0]
@@ -247,7 +247,7 @@ function Screen-SelectResolution
 
     Write-Host
     Write-Host "Select Resolution" -ForegroundColor Blue
-    $selectedIndex = Console-Menu $options -ReturnIndex -Index $currentIndex -ActiveColor Cyan
+    $selectedIndex = Console-Menu $options -CurrentIndex $currentIndex -ReturnIndex -ActiveColor Cyan
     if ($selectedIndex -gt -1)
     {
         $selectedMode = $uniqueModes[$selectedIndex]
