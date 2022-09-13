@@ -20,7 +20,6 @@ function Write-Colors {
 Set-Alias -Name unzip -Value Expand-Archive
 
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
-#Import-Module $PSScriptRoot\Move-WindowsToScreen.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Prompt-Default.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
@@ -62,4 +61,10 @@ try {
 finally {
     Write-Host ""
     Pop-Location
+}
+
+$p = Get-Process -Id $PID
+If ($p.Parent.Name -eq $p.Name -and !($p.MainWindowTitle))
+{
+    Stop-Process -Id $p.Parent.Id -Force
 }

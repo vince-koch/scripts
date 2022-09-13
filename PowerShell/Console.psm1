@@ -42,9 +42,11 @@ class Menu
     [string] $Title = $null
 
     [array] $Items
+    [string] $ItemsProperty = $null
     [boolean] $IgnoreEscape = $false
     [boolean] $IsMultiSelect = $false
-    
+    [boolean] $ReturnIndex = $false
+
     [int] $CurrentIndex = 0
     [array] $SelectedIndexes = @()
     [boolean] $WasExitRequested = $false
@@ -63,7 +65,7 @@ class Menu
         $this.CurrentIndex = [System.Math]::Max($this.CurrentIndex, 0)
         $this.SelectedIndexes = @()
         $this.WasExitRequested = $false
-        
+
         $this.Draw($false)
         while ($this.WasExitRequested -eq $false)
         {
@@ -114,12 +116,20 @@ class Menu
         }
 
         $endIndex = $startIndex + $renderCount
-        
+
         for ($i = $startIndex; $i -lt $endIndex; $i++)
         {
             if ($this.Items[$i] -ne $null)
             {
-                $item = $this.Items[$i]
+                if ([string]::IsNullOrWhiteSpace($this.ItemsProperty))
+                {
+                    $item = $this.Items[$i]
+                }
+                else
+                {
+                    $item = $this.Items[$i] | Select -ExpandProperty $this.ItemsProperty
+                }
+
                 if ($this.IsMultiSelect)
                 {
                     if ($this.SelectedIndexes -contains $i)
@@ -170,7 +180,7 @@ class Menu
         {
             $this.CurrentIndex = [System.Math]::Min($this.CurrentIndex + 1, $this.Items.Length - 1)
         }
-        
+
         # enter
         if ($keyinfo.Key -eq [System.ConsoleKey]::Enter)
         {
@@ -210,31 +220,49 @@ class Menu
         # single select
         if ($this.IsMultiSelect -eq $false)
         {
-            return $this.Items[$this.CurrentIndex]
+            if ($this.ReturnIndex -eq $true)
+            {
+                return $this.CurrentIndex
+            }
+            else
+            {
+                return $this.Items[$this.CurrentIndex]
+            }
         }
 
         # multi-select, convert selected indexes to selected items
-        $ordered = $this.SelectedIndexes | Sort { $_ }
-        $result = $this.Items[$ordered]
-        return $result
+        $ordered = @( $this.SelectedIndexes | Sort { $_ } )
+        if ($this.ReturnIndex -eq $true)
+        {
+            return $ordered
+        }
+        else
+        {
+            $result = $this.Items[$ordered]
+            return $result
+        }
     }
 }
 
 function Console-Menu {
     param (
         [array] $Items,
+        [string] $ItemsProperty = $null,
         [string] $Title = $null,
         [switch] $IsMultiSelect = $false,
         [switch] $IgnoreEscape = $false,
+        [switch] $ReturnIndex = $false,
         [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green,
         [System.ConsoleColor] $TitleColor = [System.ConsoleColor]::Cyan
     )
 
     $menu = [Menu]::new()
     $menu.Items = $Items
+    $menu.ItemsProperty = $ItemsProperty
     $menu.Title = $Title
     $menu.IsMultiSelect = $IsMultiSelect
     $menu.IgnoreEscape = $IgnoreEscape
+    $menu.ReturnIndex = $ReturnIndex
     $menu.ActiveColor = $ActiveColor
     $menu.TitleColor = $TitleColor
 
@@ -251,7 +279,7 @@ function Console-RunTests {
     $wasExitRequested = $false
     while ($wasExitRequested -eq $false) {
         Write-Host ""
-        
+
         $mainMenuResult = Console-Menu -Title "Main Menu" -Items @("Confirm", "Menu", "Menu (Multi-Select)", "Menu (Ignore Escape)", "Exit")
 
         $subMenuTitle = "Select Fruit:  [$mainMenuResult]"
