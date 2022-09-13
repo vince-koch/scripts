@@ -75,14 +75,14 @@ function Git-DeleteBranches {
 
     $branches = $branches | ForEach-Object { $_.Trim(" *") }
 
-    [string[]] $selectedBranches = Console-Menu $branches -MultiSelect
+    [string[]] $selectedBranches = Console-Menu -Items $branches -IsMultiSelect
 
     if ($selectedBranches.Length -eq 0) {
         Write-Host "No branches selected" -ForegroundColor Red
         return
     }
 
-    $confirm = Console-Confirm -Prompt "Are you sure you want to delete $($selectedBranches.Length) branches [y/N]? " -Default $false
+    $confirm = Console-Confirm -Prompt "Are you sure you want to delete $($selectedBranches.Length) branches locally [y/N]? " -Default $false
     if ($confirm -ne $true) {
         Write-Host "User cancelled" -ForegroundColor Red
         return
@@ -118,7 +118,7 @@ function Git-GetCommitDate() {
         $commitDate = git show -s --format=%ci
         return $commitDate
     }
-    
+
     return $null
 }
 

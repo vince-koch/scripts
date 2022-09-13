@@ -196,7 +196,7 @@ class Menu
         }
 
         # space
-        if ($this.IsMultiSelect -and $keyinfo.Key -eq [System.ConsoleKey]::Space)
+        if ($this.IsMultiSelect -and $keyinfo.Key -eq [System.ConsoleKey]::Spacebar)
         {
             if ($this.SelectedIndexes  -contains $this.CurrentIndex)
             {
