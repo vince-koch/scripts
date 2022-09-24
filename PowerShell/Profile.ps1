@@ -92,7 +92,16 @@ class Welcome {
         [System.IO.File]::WriteAllText($lastUpdateCheckPath, [System.DateTime]::Now.ToString())
 
         # perform an update check
-        if (Git-UpdateCheck -eq -1) {
+        [int] $check = Git-UpdateCheck
+        if ($check -eq 1) { 
+            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
+            Write-Host "AHEAD" -ForegroundColor Yellow
+        }
+        elseif ($check -eq 0) {
+            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
+            Write-Host "CURRENT" -ForegroundColor Green
+        }
+        elseif ($check -eq -1) {
             Write-Host " / " -ForegroundColor DarkGray -NoNewLine
             Write-Host "UPDATE AVAILABLE" -ForegroundColor Red
 
@@ -104,15 +113,7 @@ class Welcome {
                 # and if it was successful restart powershell
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "Update successful" -ForegroundColor Green
-                    Write-Host "opening a new Powershell session" -ForegroundColor Yellow
-
-                    $psVersion = (Get-Host).Version
-                    if ($psVersion.Major -le 5) {
-                        Invoke-Command { & "powershell.exe" } -NoNewScope # PowerShell 5
-                    }
-                    else {
-                        Invoke-Command { & "pwsh.exe" } -NoNewScope
-                    }
+                    Write-Host "Restaring powerhsell is recommended" -ForegroundColor Yellow
                 }
                 else {
                     Write-Host "Update was not successful.  Please reveiew messages above to resolve." -ForegroundColor Red

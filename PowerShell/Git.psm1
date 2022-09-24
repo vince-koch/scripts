@@ -123,8 +123,7 @@ function Git-GetCommitDate() {
 }
 
 function Git-UpdateCheck {
-    #git fetch
-    git remote update
+    git remote update | Out-Null
     
     [array] $lines = @( git status )
 
