@@ -75,7 +75,7 @@ class Welcome {
 
     static [void] AutoUpdate() {
         # see if an update check is required
-        [string] $lastUpdateCheckPath = ".git/update-check.txt"
+        [string] $lastUpdateCheckPath = [System.IO.Path]::Combine($PSScriptRoot, "..", ".git", "update-check.txt")
         
         # if if we've checked for updates recently
         if ([System.IO.File]::Exists($lastUpdateCheckPath)) {
