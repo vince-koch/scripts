@@ -73,6 +73,8 @@ class Welcome {
         # }
     }
 
+    static [int] $AutoUpdateCheckHours = 24
+
     static [void] AutoUpdate() {
         # see if an update check is required
         [string] $lastUpdateCheckPath = [System.IO.Path]::Combine($PSScriptRoot, "..", ".git", "update-check.txt")
@@ -81,7 +83,7 @@ class Welcome {
         if ([System.IO.File]::Exists($lastUpdateCheckPath)) {
             $text = [System.IO.File]::ReadAllText($lastUpdateCheckPath)
             [System.DateTime] $lastUpdateCheck = $text -as [System.DateTime]
-            if ($lastUpdateCheck -ne $null -and $lastUpdateCheck.AddHours(24) -gt [System.DateTime]::Now) {
+            if ($lastUpdateCheck -ne $null -and $lastUpdateCheck.AddHours([Welcome]::AutoUpdateCheckHours) -gt [System.DateTime]::Now) {
                 return
             }
         }
