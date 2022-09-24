@@ -41,30 +41,85 @@ function Global:Prompt {
 	return Prompt-Default
 }
 
-# welcome message
-try {
-    Write-Host "PowerShell Version $($Host.Version.ToString())" -ForegroundColor DarkGray
+class Welcome {
+    static [void] DisplayWelcomeScreen() {
+        try {
+            $psVersion = (Get-Host).Version
+            Write-Host "PowerShell Version $($PsVersion)" -ForegroundColor DarkGray
 
-    Push-Location $PSScriptRoot
-    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -NoNewLine
+            Push-Location $PSScriptRoot
+            Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -NoNewLine
 
-    $branch = Git-GetBranchName
-    if ($branch) {
-        Write-Host " / " -ForegroundColor DarkGray -NoNewLine
-        Write-Host "$branch" -ForegroundColor Cyan -NoNewLine
+            $branch = Git-GetBranchName
+            if ($branch) {
+                Write-Host " / " -ForegroundColor DarkGray -NoNewLine
+                Write-Host "$branch" -ForegroundColor Cyan -NoNewLine
 
-        $commitDate = Git-GetCommitDate
-        Write-Host " / " -ForegroundColor DarkGray -NoNewLine
-        Write-Host "$commitDate" -ForegroundColor Blue -NoNewLine
+                $commitDate = Git-GetCommitDate
+                Write-Host " / " -ForegroundColor DarkGray -NoNewLine
+                Write-Host "$commitDate" -ForegroundColor Blue -NoNewLine
+
+                [Welcome]::AutoUpdate()
+            }
+        }
+        finally {
+            Write-Host ""
+            Pop-Location
+        }
+
+        # $p = Get-Process -Id $PID
+        # If ($p.Parent.Name -eq $p.Name -and !($p.MainWindowTitle)) {
+        #     Stop-Process -Id $p.Parent.Id -Force
+        # }
+    }
+
+    static [void] AutoUpdate() {
+        # see if an update check is required
+        [string] $lastUpdateCheckPath = ".git/update-check.txt"
+        
+        # if if we've checked for updates recently
+        if ([System.IO.File]::Exists($lastUpdateCheckPath)) {
+            $text = [System.IO.File]::ReadAllText($lastUpdateCheckPath)
+            [System.DateTime] $lastUpdateCheck = $text -as [System.DateTime]
+            if ($lastUpdateCheck -ne $null -and $lastUpdateCheck.AddHours(24) -gt [System.DateTime]::Now) {
+                #Write-Host "Update check not required at this time"
+                Write-Host " / not-checked" -ForegroundColor DarkGray -NoNewLine
+                return
+            }
+        }
+
+        # update our last update check file
+        [System.IO.File]::WriteAllText($lastUpdateCheckPath, [System.DateTime]::Now.ToString())
+
+        # perform an update check
+        if (Git-UpdateCheck -eq -1) {
+            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
+            Write-Host "UPDATE AVAILABLE" -ForegroundColor Red
+
+            $confirm = Console-Confirm -Prompt "An update is available.  Would you like to update now? [Y/n] " -Default $true
+            if ($confirm) {
+                # do the update
+                git pull
+
+                # and if it was successful restart powershell
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Host "Update successful" -ForegroundColor Green
+                    Write-Host "opening a new Powershell session" -ForegroundColor Yellow
+
+                    $psVersion = (Get-Host).Version
+                    if ($psVersion.Major -le 5) {
+                        Invoke-Command { & "powershell.exe" } -NoNewScope # PowerShell 5
+                    }
+                    else {
+                        Invoke-Command { & "pwsh.exe" } -NoNewScope
+                    }
+                }
+                else {
+                    Write-Host "Update was not successful.  Please reveiew messages above to resolve." -ForegroundColor Red
+                }
+            }
+        }
     }
 }
-finally {
-    Write-Host ""
-    Pop-Location
-}
 
-$p = Get-Process -Id $PID
-If ($p.Parent.Name -eq $p.Name -and !($p.MainWindowTitle))
-{
-    Stop-Process -Id $p.Parent.Id -Force
-}
+[Welcome]::DisplayWelcomeScreen()

@@ -3,6 +3,36 @@
 
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
+function Git-ChangeBranch {
+    # get a list of branches
+    [array] $branches = @( git branch )
+    if ($branches.Length -eq 0) {
+        Write-Host "No git branches found?" -ForegroundColor Red
+        return
+    }
+
+    [int] $currentIndex = [Array]::FindIndex($branches, [Predicate[String]] { param($s) $s.StartsWith("*") })
+    $branches = $branches | ForEach-Object { $_.Trim(" *") }
+
+    $menu = Console-CreateMenu
+    $menu.Items = $branches
+    $menu.CurrentIndex = $currentIndex
+    $menu.TitleColor = [System.ConsoleColor]::Red
+    $selectedBranch = $menu.Run()
+
+    if ($selectedBranch -eq $null) {
+        Write-Host "User cancelled" -ForegroundColor Red
+        return
+    }
+    elseif ($selectedBranch -eq $branches[$currentIndex]) {
+        Write-Host "Already on selected branch" -ForegroundColor Red
+        return
+    }
+    else {
+        git checkout $selectedBranch
+    }
+}
+
 function Git-CreateBranch {
     param (
         [Parameter(Mandatory=$true)]
@@ -32,36 +62,6 @@ function Git-CreateBranch {
     git checkout -b $branchName
     if ($LastExitCode -ne 0) {
         exit
-    }
-}
-
-function Git-ChangeBranch {
-    # get a list of branches
-    [array] $branches = @( git branch )
-    if ($branches.Length -eq 0) {
-        Write-Host "No git branches found?" -ForegroundColor Red
-        return
-    }
-
-    [int] $currentIndex = [Array]::FindIndex($branches, [Predicate[String]] { param($s) $s.StartsWith("*") })
-    $branches = $branches | ForEach-Object { $_.Trim(" *") }
-
-    $menu = Console-CreateMenu
-    $menu.Items = $branches
-    $menu.CurrentIndex = $currentIndex
-    $menu.TitleColor = [System.ConsoleColor]::Red
-    $selectedBranch = $menu.Run()
-
-    if ($selectedBranch -eq $null) {
-        Write-Host "User cancelled" -ForegroundColor Red
-        return
-    }
-    elseif ($selectedBranch -eq $branches[$currentIndex]) {
-        Write-Host "Already on selected branch" -ForegroundColor Red
-        return
-    }
-    else {
-        git checkout $selectedBranch
     }
 }
 
@@ -122,13 +122,51 @@ function Git-GetCommitDate() {
     return $null
 }
 
-Set-Alias -Name git-create-branch -Value Git-CreateBranch
+function Git-UpdateCheck {
+    #git fetch
+    git remote update
+    
+    [array] $lines = @( git status )
+
+    # foreach ($line in $lines) {
+    #     Write-Host "line: $line"
+    # }
+
+    if ($lines -match "Your branch is up to date with") {
+        # Write-Host "CURRENT" -ForegroundColor Green
+        return 0
+    }
+    
+    if ($lines -match "Your branch is behind") {
+        # Write-Host "UPDATE AVAILABLE" -ForegroundColor Red
+        # $confirm = Console-Confirm -Prompt "An update is available.  Would you like to update now? [Y/n]" -Default $true
+        # if ($confirm) {
+        #      git pull
+        # }
+        return -1
+    }
+
+    #if ($lines -match "Your branch is ahead") {
+    #    Write-Host "AHEAD" -ForegroundColor Yellow
+        return 1
+    #}
+}
+
 Set-Alias -Name git-change-branch -Value Git-ChangeBranch
+Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch
+
+Set-Alias -Name git-create-branch -Value Git-CreateBranch
+Export-ModuleMember -Function Git-CreateBranch -Alias git-create-branch
+
 Set-Alias -Name git-delete-branch -Value Git-DeleteBranches
 Set-Alias -Name git-delete-branches -Value Git-DeleteBranches
-
-Export-ModuleMember -Function Git-CreateBranch -Alias git-create-branch
-Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch
 Export-ModuleMember -Function Git-DeleteBranches -Alias git-delete-branch, git-delete-branches
+
 Export-ModuleMember -Function Git-GetBranchName
 Export-ModuleMember -Function Git-GetCommitDate
+
+Set-Alias -Name git-update-check -Value Git-UpdateCheck
+Set-Alias -Name git-check-update -Value Git-UpdateCheck
+Set-Alias -Name git-check-for-update -Value Git-UpdateCheck
+Set-Alias -Name git-check-for-updates -Value Git-UpdateCheck
+Export-ModuleMember -Function Git-UpdateCheck -Alias git-update-check, git-check-update, git-check-for-update, git-check-for-updates
