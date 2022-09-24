@@ -82,8 +82,6 @@ class Welcome {
             $text = [System.IO.File]::ReadAllText($lastUpdateCheckPath)
             [System.DateTime] $lastUpdateCheck = $text -as [System.DateTime]
             if ($lastUpdateCheck -ne $null -and $lastUpdateCheck.AddHours(24) -gt [System.DateTime]::Now) {
-                #Write-Host "Update check not required at this time"
-                Write-Host " / not-checked" -ForegroundColor DarkGray -NoNewLine
                 return
             }
         }
