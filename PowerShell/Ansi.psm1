@@ -51,6 +51,7 @@ function ansi_cursor_left {
     UnderlineReset	    = "$ESC[24m"
     Invert			    = "$ESC[7m"
     InvertReset		    = "$ESC[27m"
+    Blink               = "$ESC[5m"
     
     Fg = [PsCustomObject] @{
         Black           = "$ESC[30m"

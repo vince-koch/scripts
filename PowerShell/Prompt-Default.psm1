@@ -70,6 +70,8 @@ function Prompt-Default {
     $GLYPH_WINDOWS       = $nf_custom_windows
     $GLYPH_PROMPT        = $nf_fa_arrow_right
 
+    $HorizontalElipsis = [string][char]0x2026
+
     Console-WriteHR -ForegroundColor DarkGray
 
     # admin indicator
@@ -79,21 +81,21 @@ function Prompt-Default {
         Write-Host $admin -ForegroundColor Red -NoNewline
     }
 
-    # username, computer name, current folder, and git branch
-    $userName = [Security.Principal.WindowsIdentity]::GetCurrent().Name;
-    $userName = "$GLYPH_USER $userName"
-    Write-Host $userName -ForegroundColor Magenta -NoNewLine
-
     # computer name
     $computerName = $env:COMPUTERNAME
-    $computerName = "$GLYPH_WINDOWS $computerName"
-    Write-Host " $computerName" -ForegroundColor DarkGray -NoNewLine
+    Write-Host "$GLYPH_WINDOWS $computerName" -ForegroundColor DarkMagenta -NoNewLine
+
+    # username, computer name, current folder, and git branch
+    $userName = [Security.Principal.WindowsIdentity]::GetCurrent().Name;
+    if ($userName.StartsWith($computerName)) {
+        $userName = $userName.SubString($computerName.Length + 1)
+    }
+    Write-Host " $GLYPH_USER $userName" -ForegroundColor Magenta -NoNewLine
 
     # current folder
     #$folder = Split-Path -Path $pwd -Leaf
     $folder = $pwd
-    $folder = "$GLYPH_FOLDER_OPEN $folder"
-    Write-Host " $folder" -ForegroundColor Yellow -NoNewLine
+    Write-Host " $GLYPH_FOLDER_OPEN $folder" -ForegroundColor Yellow -NoNewLine
 
     # git branch
     Write-GitBranchName "$GLYPH_GIT_BRANCH "

@@ -370,9 +370,10 @@ function Console-WriteHR {
     if ($ForegroundColor.HasValue -ne $null) {
         $ForegroundColor = DarkGray
     }
-
-    # https://www.codetable.net/unicodecharacters?page=33
-    $HR = [string][char]9472
+   
+    $BoxDrawingsLightHorizontal = [string][char]0x2500
+    $BoxDrawingsDoubleHorizontal = [string][char]0x2550
+    $HR = $BoxDrawingsLightHorizontal
     Write-Host $($HR * [Console]::WindowWidth) -ForegroundColor $ForegroundColor
 }
 
