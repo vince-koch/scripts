@@ -322,7 +322,63 @@ function Console-RunTests {
     }
 }
 
+function Console-WriteColor {
+	# cribbed from:  https://github.com/EvotecIT/PSWriteColor/blob/master/Public/Write-Color.ps1
+	param (
+		[alias ('T')] [String[]] $Text,
+		[alias ('F', 'FG', 'C', 'Color')] [ConsoleColor[]] $ForegroundColor = [ConsoleColor]::White,
+		[alias ('B', 'BG')] [ConsoleColor[]] $BackGroundColor = $null,
+		[alias('DateFormat', 'TimeFormat')] [string] $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss',
+		[switch] $NoNewLine,
+		[switch] $ShowTime
+	)
+	
+	$DefaultColor = $ForegroundColor[0]
+	
+	if ($ShowTime) { Write-Host -Object "[$([datetime]::Now.ToString($DateTimeFormat))] " -NoNewline } # Add Time before output
+	
+    if ($Text.Count -ne 0) {
+        if ($ForegroundColor.Count -ge $Text.Count) {
+            # the real deal coloring
+            if ($null -eq $BackGroundColor) {
+                for ($i = 0; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -NoNewline }
+            }
+			else {
+                for ($i = 0; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -BackgroundColor $BackGroundColor[$i] -NoNewline }
+            }
+        }
+		else {
+            if ($null -eq $BackGroundColor) {
+                for ($i = 0; $i -lt $ForegroundColor.Length ; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -NoNewline }
+                for ($i = $ForegroundColor.Length; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $DefaultColor -NoNewline }
+            }
+			else {
+                for ($i = 0; $i -lt $ForegroundColor.Length ; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -BackgroundColor $BackGroundColor[$i] -NoNewline }
+                for ($i = $ForegroundColor.Length; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $DefaultColor -BackgroundColor $BackGroundColor[0] -NoNewline }
+            }
+        }
+    }
+	
+	if ($NoNewLine -eq $true) { Write-Host -NoNewline } else { Write-Host } # Support for no new line
+}
+
+function Console-WriteHR {
+    param (
+        [AllowNull()] [Nullable[ConsoleColor]] $ForegroundColor = $null
+    )
+
+    if ($ForegroundColor.HasValue -ne $null) {
+        $ForegroundColor = DarkGray
+    }
+
+    # https://www.codetable.net/unicodecharacters?page=33
+    $HR = [string][char]9472
+    Write-Host $($HR * [Console]::WindowWidth) -ForegroundColor $ForegroundColor
+}
+
 Export-ModuleMember -Function Console-Confirm
 Export-ModuleMember -Function Console-Menu
 Export-ModuleMember -Function Console-CreateMenu
 Export-ModuleMember -Function Console-RunTests
+Export-ModuleMember -Function Console-WriteColor
+Export-ModuleMember -Function Console-WriteHR

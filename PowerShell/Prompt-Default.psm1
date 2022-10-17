@@ -70,9 +70,7 @@ function Prompt-Default {
     $GLYPH_WINDOWS       = $nf_custom_windows
     $GLYPH_PROMPT        = $nf_fa_arrow_right
 
-    # https://www.codetable.net/unicodecharacters?page=33
-    $HR = [string][char]9472
-    Write-Host $($HR * [Console]::WindowWidth) -ForegroundColor DarkGray
+    Console-WriteHR -ForegroundColor DarkGray
 
     # admin indicator
     $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
