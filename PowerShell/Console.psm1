@@ -42,7 +42,9 @@ class Menu
     [string] $Title = $null
 
     [array] $Items
-    [string] $ItemsProperty = $null
+    #[string] $ItemsProperty = $null
+    [scriptblock] $ItemsProperty = $null
+
     [boolean] $IgnoreEscape = $false
     [boolean] $IsMultiSelect = $false
     [boolean] $ReturnIndex = $false
@@ -87,7 +89,7 @@ class Menu
         $titleLine = $( if ([string]::IsNullOrWhiteSpace($this.Title)) { 0 } else { 1 } )
 
         # calculate items to render and reset cursor position if requested to do so
-        $renderCount = [System.Math]::Min($this.Items.Length + $titleLine, [System.Console]::WindowHeight - 1) 
+        $renderCount = [System.Math]::Min($this.Items.Length + $titleLine, [System.Console]::WindowHeight - 1)
         if ($resetCursorPosition)
         {
             [System.Console]::CursorTop = [System.Console]::CursorTop - $renderCount
@@ -121,13 +123,13 @@ class Menu
         {
             if ($this.Items[$i] -ne $null)
             {
-                if ([string]::IsNullOrWhiteSpace($this.ItemsProperty))
+                if ($this.ItemsProperty -eq $null)
                 {
                     $item = $this.Items[$i]
                 }
                 else
                 {
-                    $item = $this.Items[$i] | Select -ExpandProperty $this.ItemsProperty
+                    $item = $this.ItemsProperty.Invoke( $this.Items[$i] )
                 }
 
                 if ($this.IsMultiSelect)
@@ -247,7 +249,7 @@ class Menu
 function Console-Menu {
     param (
         [array] $Items,
-        [string] $ItemsProperty = $null,
+        [ScriptBlock] $ItemsProperty = $null,
         [string] $Title = $null,
         [switch] $IsMultiSelect = $false,
         [switch] $IgnoreEscape = $false,

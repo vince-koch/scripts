@@ -12,7 +12,7 @@ function Main
 {
     switch ($verb)
     {
-        "current" 
+        "current"
         {
             [object[]] $settings = ReadSettingsFile
             [string] $currentSchemeName = SelectCurrentSchemeName $settings
@@ -29,7 +29,7 @@ function Main
             Write-Host $prevSchemeName -ForegroundColor Yellow
         }
 
-        "next" 
+        "next"
         {
             [object[]] $settings = ReadSettingsFile
             [string] $nextSchemeName = SelectRelativeSchemeName $settings 1
@@ -38,11 +38,11 @@ function Main
             Write-Host $nextSchemeName -ForegroundColor Yellow
         }
 
-        "list" 
+        "list"
         {
             [object[]] $settings = ReadSettingsFile
             [string[]] $list = SelectMatchingSchemeNames $settings $arg0
-            
+
             Write-Host $list.Length -ForegroundColor Yellow -NoNewline
             if ($null -ne $arg0 -and $arg0.Length -gt 0)
             {
@@ -79,7 +79,7 @@ function Main
             }
         }
 
-        "table" 
+        "table"
         {
             Write-Host
             [System.ConsoleColor] $altForegroundColor = if ($null -eq $arg0 -or $arg0.Length -eq 0) { 7 } else { $arg0 }
@@ -93,11 +93,11 @@ function Main
             WriteColorTable $altForegroundColor
         }
 
-        "registry" 
+        "registry"
         {
             SyncToRegistry
         }
-		
+
 		"download"
 		{
 			Write-Host "Download from one of the following locations:"
@@ -175,7 +175,7 @@ function InteractiveMain
                     if ($keyInfo.Key -eq "Y" -or $keyInfo.Key -eq "Enter")
                     {
                         Write-Host "y" -ForegroundColor Yellow
-                        $hasAnsweredPrompt = $true                        
+                        $hasAnsweredPrompt = $true
                         SyncToRegistry
                     }
                     elseif ($keyInfo.Key -eq "N" -or $keyInfo.Key -eq "Escape")
@@ -213,7 +213,7 @@ function WriteCurrentSchemeNameToSettingsFile
 
     # read lines from file
     [string[]] $lines = Get-Content $settingsPath
-    
+
     # update the appropriate lines
     [int] $lineIndex = -1
     foreach ($line in $lines)
@@ -266,7 +266,7 @@ function SelectCurrentScheme
 
     [string] $currentSchemeName = $settings.profiles.defaults.colorScheme
     [object] $currentScheme = $settings.schemes | Where-Object {$_.name -eq $currentSchemeName}
-    
+
     return $currentScheme
 }
 
@@ -420,7 +420,7 @@ function SyncToRegistry
     {
         [decimal] $multiplier = [decimal] $settings.profiles.defaults.acrylicOpacity
         [int] $windowAlpha = 255 * $multiplier
-        
+
         [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, "WindowAlpha", $windowAlpha)
     }
 
@@ -454,7 +454,7 @@ function SetRegistryColor
     [System.Drawing.Color] $rgb = [System.Drawing.ColorTranslator]::FromHtml($colorValue)
     [System.Drawing.Color] $bgr = [System.Drawing.Color]::FromArgb(0, $rgb.B, $rgb.G, $rgb.R)
     [int] $color = $bgr.ToArgb()
-    
+
     [string] $ConsoleRegistryKey = "HKEY_CURRENT_USER\Console"
     [Microsoft.Win32.Registry]::SetValue($ConsoleRegistryKey, $valueName, $color)
 
