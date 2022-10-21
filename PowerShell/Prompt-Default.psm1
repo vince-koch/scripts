@@ -108,7 +108,7 @@ function Prompt-Default {
     if ("$lastCommandRunTime".Length -gt 0) {
         $x = $Host.UI.RawUI.WindowSize.Width - ("$lastCommandRunTime".Length + 13 + 1)
         $y = $Host.UI.RawUI.CursorPosition.Y
-        $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
+        $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates ($x - 1), $y
 
         if ($lastCommandSuccess) {
             Write-Host $lastCommandRunTime -ForegroundColor DarkGreen -NoNewLine
@@ -124,7 +124,7 @@ function Prompt-Default {
     $time = "$GLYPH_CLOCK $time"
     $x = $Host.UI.RawUI.WindowSize.Width - "$time".Length
     $y = $Host.UI.RawUI.CursorPosition.Y
-    $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates $x, $y
+    $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates ($x - 1), $y
     Write-Host "$time" -ForegroundColor DarkGray -NoNewLine
 
     # prompt

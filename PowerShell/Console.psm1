@@ -376,7 +376,7 @@ function Console-WriteHR {
     $BoxDrawingsLightHorizontal = [string][char]0x2500
     $BoxDrawingsDoubleHorizontal = [string][char]0x2550
     $HR = $BoxDrawingsLightHorizontal
-    Write-Host $($HR * [Console]::WindowWidth) -ForegroundColor $ForegroundColor
+    Write-Host $($HR * ([Console]::WindowWidth - 1)) -ForegroundColor $ForegroundColor
 }
 
 Export-ModuleMember -Function Console-Confirm
