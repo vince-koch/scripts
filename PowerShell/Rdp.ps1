@@ -4,25 +4,28 @@ param (
     [switch] $multimon = $false
 )
 
+Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+$ErrorActionPreference = "Stop"
+
 function ShowHelp() {
     Write-Host "rdp [machineName] [-fullscreen] [-multimon]"
 }
 
-class Option
+class RdpOption
 {
     [string] $Key;
     [string] $Type;
     [string] $Value;
 
-    static [Option] Parse([string] $line) {
+    static [RdpOption] Parse([string] $line) {
         [string[]] $parts = $line.Split(":")
 
-        if ($parts.Length -eq 3)
+        if ($parts.Length -gt 2)
         {
-            [Option] $option = [Option]::new()
+            [RdpOption] $option = [RdpOption]::new()
             $option.Key = $parts[0]
             $option.Type = $parts[1]
-            $option.Value = $parts[2]
+            $option.Value = [String]::Join(":", $( $parts | Select -Skip 2 ))
 
             return $option
         }
@@ -30,7 +33,7 @@ class Option
         return $null
     }
 
-    static [void] LaunchRdp([Option[]] $options) {
+    static [void] LaunchRdp([RdpOption[]] $options) {
         [System.IO.StringWriter] $writer = [System.IO.StringWriter]::new()
         foreach ($option in $options) {
             $writer.Write($option.Key)
@@ -51,7 +54,17 @@ class Option
         Remove-Item -Path $path
     }
 
-    static [void] SetValue([Option[]] $options, [string] $key, [string] $value) {
+    static [String] GetValue([RdpOption[]] $options, [string] $key) {
+        foreach ($option in $options) {
+            if ($option.Key -eq $key) {
+                return $option.Value
+            }
+        }
+
+        return $null
+    }
+
+    static [void] SetValue([RdpOption[]] $options, [string] $key, [string] $value) {
         foreach ($option in $options) {
             if ($option.Key -eq $key) {
                 $option.Value = $value
@@ -60,10 +73,20 @@ class Option
         }
     }
 
-    static [Option[]] GetAll() {
-        [System.Collections.ArrayList] $options = [System.Collections.ArrayList]::new()
+    static [void] Debug([RdpOption[]] $options) {
+        foreach ($option in $options) {
+            Write-Host "$($option.Key) = $($option.Value)"
+        }
+    }
 
-        [array] $template = @(
+    static [RdpOption[]] LoadFromFile($path) {
+        $lines = [System.IO.File]::ReadAllLines($path)
+        $options = [RdpOption]::GetFromLines($lines)
+        return $options
+    }
+
+    static [RdpOption[]] GetDefault() {
+        [String[]] $lines = @(
             "full address:s:",
             "screen mode id:i:1",
             "use multimon:i:0",
@@ -112,8 +135,15 @@ class Option
             "kdcproxyname:s:"
         )
 
-        foreach ($line in $template) {
-            [Option] $option = [Option]::Parse($line)
+        $options = [RdpOption]::GetFromLines($lines)
+        return $options
+    }
+
+    static [RdpOption[]] GetFromLines([String[]] $lines) {
+        [System.Collections.ArrayList] $options = [System.Collections.ArrayList]::new()
+
+        foreach ($line in $lines) {
+            [RdpOption] $option = [RdpOption]::Parse($line)
             if ($option -ne $null) {
                 $options.Add($option)
             }
@@ -128,21 +158,54 @@ if ($machineName -eq "help" -or $machineName -eq "--help" -or $machineName -eq "
     exit
 }
 
-if ([System.String]::IsNullOrWhiteSpace($machineName)) {
-    $machineName = Read-Host "machine name"
+[RdpOption[]] $options = $null
+
+# if they gave us a machine name, use default options and set full address
+if ([System.String]::IsNullOrWhiteSpace($machineName) -eq $false) {
+    $options = [RdpOption]::GetDefault()
+    [RdpOption]::SetValue($options, "full address", $machineName)
 }
 
-if ([System.String]::IsNullOrWhiteSpace($machineName) -eq $false) {
-    [Option[]] $options = [Option]::GetAll()
-    [Option]::SetValue($options, "full address", $machineName)
+# if we don't have options yet, see if they want to select a *.rdp file
+if ($options -eq $null) {
+    $documents = [Environment]::GetFolderPath("MyDocuments")
+    $files = [System.IO.Directory]::GetFiles($documents, "*.rdp", "TopDirectoryOnly")
+    if ($files.Length -gt 0) {
+        $choice = Console-Menu -Items $files -ItemsProperty { param ($item) [System.IO.Path]::GetFileNameWithoutExtension($item) } -Title "Select RDP File"
+        if ($choice -ne $null) {
+            $options = [RdpOption]::LoadFromFile($choice)
+        }
+    }
+}
 
+# if we still don't have options then prompt them for a machine name
+if ($options -eq $null) {
+    #$machineName = Read-Host "machine name"
+    Write-Host "Machine Name: " -ForegroundColor Cyan -NoNewLine
+    $machineName = Read-Host
+
+    if ([System.String]::IsNullOrWhiteSpace($machineName) -eq $false) {
+        $options = [RdpOption]::GetDefault()
+        [RdpOption]::SetValue($options, "full address", $machineName)
+    }
+}
+
+# hopefully we have options by now
+if ($options -eq $null) {
+    Write-Host "User cancelled" -ForegroundColor Red
+}
+else {
     if ($fullscreen -eq $true) {
-        [Option]::SetValue($options, "screen mode id", "2")       
+        [RdpOption]::SetValue($options, "screen mode id", "2")       
     }
 
     if ($multimon -eq $true) {
-        [Option]::SetValue($options, "use multimon", "1")
+        [RdpOption]::SetValue($options, "use multimon", "1")
     }
 
-    [Option]::LaunchRdp($options)
+    $fullAddress = [RdpOption]::GetValue($options, "full address")
+    Write-Host "Connecting to " -NoNewLine
+    Write-Host $fullAddress -ForegroundColor Cyan
+
+    [RdpOption]::LaunchRdp($options)
 }
