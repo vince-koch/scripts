@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.12
+// @version      0.14
 // @description  (CTRL+`) = toggle targeting mode; (ESC) = exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -18,9 +18,9 @@
     let _isTargeting = false;
     let _lastMouseEvent = null;
     let _glowingElement = null;
-    let _infoPanel = createInfoPanel();
+    let _infoPanel = createKillInfoPanel();
 
-    function createGlowStyle() {
+    function appendKillGlowStyle() {
         const style = document.createElement("style");
         style.innerHTML = `
             .kill-glow, .kill-panel {
@@ -59,7 +59,7 @@
         document.head.appendChild(style);
     }
 
-    function createInfoPanel() {
+    function createKillInfoPanel() {
         const div = document.createElement("div");
         div.innerHTML = "Kill Element On Demand Activated;  CTRL+~ = Toggle Targeting;  ESC = Exit Targeting;  ~ = Kill Element";
         div.classList.add("kill-panel");
@@ -96,12 +96,6 @@
                 addGlow(hoverElement);
             }
         }
-
-        // Remove focus from any focused element
-        window.focus();
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
     }
 
     function onMouseMove(event) {
@@ -133,7 +127,7 @@
         }
     }
 
-    createGlowStyle();
+    appendKillGlowStyle();
 
     document.addEventListener("mousemove", e => onMouseMove(e));
     document.addEventListener("keydown", e => onKeyDown(e));
