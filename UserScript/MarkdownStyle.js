@@ -5,6 +5,7 @@
 // @match        file:///**/*.md
 // @require      https://cdn.jsdelivr.net/npm/showdown@2.1.0/dist/showdown.min.js
 // @resource     CSS_GITHUB https://raw.githubusercontent.com/sindresorhus/github-markdown-css/main/github-markdown.css
+// @icon         https://raw.githubusercontent.com/vince-koch/scripts/main/UserScript/cookie.ico
 // @grant        GM_addStyle
 // @grant        GM_getResourceText
 // ==/UserScript==
