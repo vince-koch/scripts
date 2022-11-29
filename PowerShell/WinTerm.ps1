@@ -101,8 +101,9 @@ function Main
 		"download"
 		{
 			Write-Host "Download from one of the following locations:"
-            Write-Host "    https://www.atomcorp.dev/api/v1/themes"
-            Write-Host "    https://raw.githubusercontent.com/atomcorp/themes/master/themes.json"
+            Write-Host "    SITE: https://windowsterminalthemes.dev/"
+            Write-Host "    REPO: https://github.com/atomcorp/themes"
+            Write-Host "    JSON: https://raw.githubusercontent.com/atomcorp/themes/master/themes.json"
 		}
 
         "interactive" { InteractiveMain }

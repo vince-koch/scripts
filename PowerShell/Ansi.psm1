@@ -3,7 +3,8 @@
 
 # ANSI VT 100 Code Reference
 # https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html#deletion
-
+# https://en.wikipedia.org/wiki/ANSI_escape_code
+# https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
 [string] $ESC                  = "$([char]27)" 
 
 function ansi_cursor_up {
@@ -62,14 +63,14 @@ function ansi_cursor_left {
         Magenta         = "$ESC[35m"
         Cyan            = "$ESC[36m"
         White           = "$ESC[37m"
-        BrightBlack     = "$ESC[30;1m"
-        BrightRed       = "$ESC[31;1m"
-        BrightGreen     = "$ESC[32;1m"
-        BrightYellow    = "$ESC[33;1m"
-        BrightBlue      = "$ESC[34;1m"
-        BrightMagenta   = "$ESC[35;1m"
-        BrightCyan      = "$ESC[36;1m"
-        BrightWhite     = "$ESC[37;1m"
+        BrightBlack     = "$ESC[90m"
+        BrightRed       = "$ESC[91m"
+        BrightGreen     = "$ESC[92m"
+        BrightYellow    = "$ESC[93m"
+        BrightBlue      = "$ESC[94m"
+        BrightMagenta   = "$ESC[95m"
+        BrightCyan      = "$ESC[96m"
+        BrightWhite     = "$ESC[97m"
     }
 
     Bg = [PsCustomObject] @{
@@ -81,14 +82,14 @@ function ansi_cursor_left {
         Magenta         = "$ESC[45m"
         Cyan            = "$ESC[46m"
         White           = "$ESC[47m"
-        BrightBlack     = "$ESC[40;1m"
-        BrightRed       = "$ESC[41;1m"
-        BrightGreen     = "$ESC[42;1m"
-        BrightYellow    = "$ESC[43;1m"
-        BrightBlue      = "$ESC[44;1m"
-        BrightMagenta   = "$ESC[45;1m"
-        BrightCyan      = "$ESC[46;1m"
-        BrightWhite     = "$ESC[47;1m"
+        BrightBlack     = "$ESC[100m"
+        BrightRed       = "$ESC[101m"
+        BrightGreen     = "$ESC[102m"
+        BrightYellow    = "$ESC[103m"
+        BrightBlue      = "$ESC[104m"
+        BrightMagenta   = "$ESC[105m"
+        BrightCyan      = "$ESC[106m"
+        BrightWhite     = "$ESC[107m"
     }
 
     Clear = [PsCustomObject] @{
@@ -107,6 +108,26 @@ function ansi_cursor_left {
         Right   = ansi_cursor_right
         Left    = ansi_cursor_left
     }
+}
+
+$Ansi.Fg | Add-Member -MemberType ScriptMethod -Name "Rgb" -Force -Value {
+    param (
+        [int] $r,
+        [int] $g,
+        [int] $b
+    )
+
+    return "$ESC[38;2;$($r);$($g);$($b)m"
+}
+
+$Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Rgb" -Force -Value {
+    param (
+        [int] $r,
+        [int] $g,
+        [int] $b
+    )
+
+    return "$ESC[48;2;$($r);$($g);$($b)m"
 }
 
 function Get-Ansi {

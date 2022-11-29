@@ -21,7 +21,7 @@ Set-Alias -Name unzip -Value Expand-Archive
 
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Prompt-Default.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
@@ -38,14 +38,17 @@ function Which {
 
 # set prompt
 function Global:Prompt {
-	return Prompt-Default
+	#return Prompt-SingleLine
+    return Prompt-MultiLine
 }
 
 class Welcome {
     static [void] DisplayWelcomeScreen() {
         try {
             $psVersion = (Get-Host).Version
-            Write-Host "PowerShell Version $($PsVersion)" -ForegroundColor DarkGray
+            if ($psVersion.Major -lt 6) {
+                Write-Host "PowerShell $($PsVersion.Major).$($PsVersion.Minor)"
+            }
 
             Push-Location $PSScriptRoot
             Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -NoNewLine
