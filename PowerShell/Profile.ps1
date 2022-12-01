@@ -1,3 +1,34 @@
+param (
+    [Parameter(Mandatory = $false)]
+    [string] $command = $null
+)
+
+# install command
+if ($command -eq "install") {
+    # ensure profile folder exists
+    $folder = [System.IO.Path]::GetDirectoryName($profile)
+    if (-not [System.IO.Directory]::Exists($folder)) {
+        $null = [System.IO.Directory]::CreateDirectory($folder)
+    }
+
+    # backup profile file if it already exists
+    if ([System.IO.File]::Exists($profile)) {
+        $backup = "$($profile).backup-$($(Get-Date).Ticks)"
+
+        Write-Host "Backing up existing profile to" -NoNewLine
+        Write-Host " $backup" -ForegroundColor DarkGray
+        [System.IO.File]::Copy($profile, $backup)
+    }
+
+    # dot source this file into the profile file
+    [System.IO.File]::WriteAllText($profile, ". $PSCommandPath")
+    Write-Host "Profile has been installed" -NoNewLine
+    Write-Host " $profile" -ForegroundColor DarkGray
+
+    # all done
+    return
+}
+
 function Write-Colors {
     Write-Host "Black" -ForegroundColor Black
     Write-Host "Blue" -ForegroundColor Blue
