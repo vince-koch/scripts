@@ -104,7 +104,7 @@
     }
 
     function onKeyDown(event) {
-        console.info("event.key = ", event.key);
+        //console.info("event.key = ", event.key);
 
         if (event.key === "`") {
             if (event.ctrlKey === true) {
