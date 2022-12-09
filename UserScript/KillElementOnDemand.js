@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.15
+// @version      0.16
 // @description  (CTRL+`) = toggle targeting mode; (ESC) = exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -14,6 +14,8 @@
 
 (function() {
     'use strict';
+
+    const _keyInfo = "CTRL+~ = Toggle Targeting;  ESC = Exit Targeting;  ~ = Kill Element";
 
     let _isTargeting = false;
     let _lastMouseEvent = null;
@@ -61,7 +63,7 @@
 
     function createKillInfoPanel() {
         const div = document.createElement("div");
-        div.innerHTML = "Kill Element On Demand Activated;  CTRL+~ = Toggle Targeting;  ESC = Exit Targeting;  ~ = Kill Element";
+        div.innerHTML = "Kill Element On Demand Activated;  " + _keyInfo;
         div.classList.add("kill-panel");
         div.classList.add("kill-pulse");
 
@@ -109,7 +111,6 @@
         if (event.key === "`") {
             if (event.ctrlKey === true) {
                 _isTargeting = !_isTargeting;
-                createInfoPanel();
                 updateGlow();
                 event.preventDefault();
             }
@@ -131,5 +132,5 @@
 
     document.addEventListener("mousemove", e => onMouseMove(e));
     document.addEventListener("keydown", e => onKeyDown(e));
-    console.info('Kill Element On Demand ==> ', { "CTRL+`": "Toggle targeting", "`": "Kill targeted element" });
+    console.info('Kill Element On Demand ==> ' + _keyInfo);
 })();
