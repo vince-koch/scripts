@@ -48,6 +48,30 @@ function Write-Colors {
     Write-Host "Yellow" -ForegroundColor Yellow
 }
 
+function Update-PowerShell-Version {
+    param (
+        [Parameter(Mandatory = $true)]
+        [string] $version
+    )
+
+    winget install Microsoft.PowerShell --version $version
+}
+
+function Update-PowerShell {
+    param (
+        [Parameter(Mandatory = $false)]
+        [string] $version = $null
+    )
+
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Write-Host "No version specified, searching for available versions..." -ForegroundColor "Yellow"
+        Write-Host ""
+        winget search Microsoft.PowerShell
+    }
+    
+    Update-PowerShell-Version
+}
+
 Set-Alias -Name unzip -Value Expand-Archive
 
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
