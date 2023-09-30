@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.17
+// @version      0.18
 // @description  (CTRL+`) = toggle targeting mode; (ESC) = exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -121,7 +121,7 @@
         if (event.key === "`") {
             if (event.ctrlKey === true) {
                 _isTargeting = !_isTargeting;
-                console.info('Kill Element On Demand ==> targeting is now ' + _isTargeting ? 'on' : 'off');
+                console.info('Kill Element On Demand ==> targeting is now ' + (_isTargeting ? 'on' : 'off'));
                 updateGlow();
                 event.preventDefault();
             }
@@ -134,7 +134,7 @@
         }
         else if (event.key === "Escape" && _isTargeting) {
             _isTargeting = false;
-            console.info('Kill Element On Demand ==> targeting is now ' + _isTargeting ? 'on' : 'off');
+            console.info('Kill Element On Demand ==> targeting is now ' + (_isTargeting ? 'on' : 'off'));
             updateGlow();
             event.preventDefault();
         }
