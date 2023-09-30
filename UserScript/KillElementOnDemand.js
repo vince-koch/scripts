@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.16
+// @version      0.17
 // @description  (CTRL+`) = toggle targeting mode; (ESC) = exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -58,7 +58,17 @@
                 100% { opacity: 0.3; }
             }`;
 
-        document.head.appendChild(style);
+        if (document.head) {
+            document.head.appendChild(style);
+        }
+        else if (document.body) {
+            console.warn('Kill Element On Demand ==> attaching to body');
+            document.body.appendChild(style);
+        }
+        else
+            console.warn('Kill Element On Demand ==> attaching to document');
+            document.appendChild(style);
+        }
     }
 
     function createKillInfoPanel() {
@@ -111,6 +121,7 @@
         if (event.key === "`") {
             if (event.ctrlKey === true) {
                 _isTargeting = !_isTargeting;
+                console.info('Kill Element On Demand ==> targeting is now ' + _isTargeting ? 'on' : 'off');
                 updateGlow();
                 event.preventDefault();
             }
@@ -122,7 +133,8 @@
             }
         }
         else if (event.key === "Escape" && _isTargeting) {
-            _isTargeting = !_isTargeting;
+            _isTargeting = false;
+            console.info('Kill Element On Demand ==> targeting is now ' + _isTargeting ? 'on' : 'off');
             updateGlow();
             event.preventDefault();
         }
