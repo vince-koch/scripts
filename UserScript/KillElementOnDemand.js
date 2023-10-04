@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kill Element On Demand
 // @namespace    http://tampermonkey.net/
-// @version      0.18
+// @version      0.19
 // @description  (CTRL+`) = toggle targeting mode; (ESC) = exit targeting mode; (`) = kill targeted element
 // @author       Vince Koch
 // @match        https://*/*
@@ -65,7 +65,7 @@
             console.warn('Kill Element On Demand ==> attaching to body');
             document.body.appendChild(style);
         }
-        else
+        else {
             console.warn('Kill Element On Demand ==> attaching to document');
             document.appendChild(style);
         }
