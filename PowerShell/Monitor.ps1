@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Add-Type -Path "$PSScriptRoot\Monitor-*.cs" -ReferencedAssemblies System.Drawing, System.Windows.Forms
+Add-Type -Path "$PSScriptRoot\Monitor-*.cs" -ReferencedAssemblies System.Collections, System.Console, System.Drawing, System.Drawing.Primitives, System.Windows.Forms
 
 $screens = [System.Windows.Forms.Screen]::AllScreens
 $monitorIndex = Console-Menu -Items $screens -ItemsProperty { param ($screen) "$($screen.DeviceName) [$($screen.Bounds.Width)x$($screen.Bounds.Height)]" } -Title "Select Monitor" -ReturnIndex
