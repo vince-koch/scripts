@@ -19,7 +19,7 @@ public static partial class Monitor
         deviceMode.dmPosition.x = 0;
         deviceMode.dmPosition.y = 0;
 
-        Console.WriteLine("Setting Primary Monitor to {0} [{1}]", device.DeviceName, device.DeviceKey);
+        //Console.WriteLine("Setting Primary Monitor to {0} [{1}]", device.DeviceName, device.DeviceKey);
         NativeMethods.ChangeDisplaySettingsEx(
             device.DeviceName,
             ref deviceMode,

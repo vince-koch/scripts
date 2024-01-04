@@ -13,9 +13,9 @@ public static partial class Monitor
         MoveWindowsTo(Screen.AllScreens[id]);
     }
 
-    internal static void MoveWindowsTo(Screen targetScreen)
+    public static void MoveWindowsTo(Screen targetScreen)
     {
-        Console.WriteLine("Moving all windows to {0}", targetScreen.DeviceName);
+        //Console.WriteLine("Moving all windows to {0}", targetScreen.DeviceName);
 
         var handles = GetTopLevelWindows();
         foreach (var handle in handles)
@@ -24,6 +24,7 @@ public static partial class Monitor
             var sourceScreen = Screen.FromHandle(handle);
             if (sourceScreen == targetScreen)
             {
+                Console.WriteLine("Window already on target screen");
                 continue;
             }
 
@@ -69,10 +70,18 @@ public static partial class Monitor
     {
         var handles = new List<IntPtr>();
 
+        IntPtr shellWindow = NativeMethods.GetShellWindow();
+
         NativeMethods.EnumWindows(
             (IntPtr handle, IntPtr lparam) =>
             {
-                if (NativeMethods.IsWindowVisible(handle) && !string.IsNullOrWhiteSpace(GetText(handle)))
+                var isVisible = NativeMethods.IsWindowVisible(handle);
+                var isShell = handle == shellWindow;
+                var text = GetText(handle);
+                var hasText = !string.IsNullOrWhiteSpace(text);
+                var shouldMove = isVisible && !isShell && hasText;
+
+                if (shouldMove)
                 {
                     handles.Add(handle);
                 }
@@ -95,6 +104,9 @@ public static partial class Monitor
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool IsWindowVisible(IntPtr hWnd);
+    
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetShellWindow();
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern int GetWindowTextLength(IntPtr hWnd);

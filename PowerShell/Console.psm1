@@ -42,7 +42,6 @@ class Menu
     [string] $Title = $null
 
     [array] $Items
-    #[string] $ItemsProperty = $null
     [scriptblock] $ItemsProperty = $null
 
     [boolean] $IgnoreEscape = $false
