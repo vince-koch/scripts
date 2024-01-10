@@ -82,16 +82,12 @@ Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
 
 # add $PSScriptRoot to the path, and some aliases for loose ps1 files
 $env:Path += ";$PSScriptRoot"
 Set-Alias -Name move-windows -Value Move-WindowsToScreen
 Set-Alias -Name move-to-screen -Value Move-WindowsToScreen
-
-function Which {
-    param ([string] $command)
-    (get-command $command).Path
-}
 
 # set prompt
 function Global:Prompt {
@@ -126,11 +122,6 @@ class Welcome {
             Write-Host ""
             Pop-Location
         }
-
-        # $p = Get-Process -Id $PID
-        # If ($p.Parent.Name -eq $p.Name -and !($p.MainWindowTitle)) {
-        #     Stop-Process -Id $p.Parent.Id -Force
-        # }
     }
 
     static [int] $AutoUpdateCheckHours = 24

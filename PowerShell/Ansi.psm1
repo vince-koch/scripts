@@ -5,7 +5,10 @@
 # https://www.lihaoyi.com/post/BuildyourownCommandLinewithANSIescapecodes.html#deletion
 # https://en.wikipedia.org/wiki/ANSI_escape_code
 # https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-[string] $ESC                  = "$([char]27)" 
+
+Add-Type -AssemblyName System.Drawing
+
+[string] $ESC = "$([char]27)"
 
 function ansi_cursor_up {
     param (
@@ -110,6 +113,25 @@ function ansi_cursor_left {
     }
 }
 
+$Ansi.Fg | Add-Member -MemberType ScriptMethod -Name "Color" -Force -Value {
+    param (
+        [System.Drawing.Color] $color
+    )
+
+    return "$ESC[38;2;$($color.R);$($color.G);$($color.B)m"    
+}
+
+$Ansi.Fg | Add-Member -MemberType ScriptMethod -Name "Hex" -Force -Value {
+    param (
+        [string] $hex
+    )
+
+    $color = [System.Drawing.ColorTranslator]::FromHtml($hex)
+    $result = "$ESC[38;2;$($color.R);$($color.G);$($color.B)m"
+
+    return $result
+}
+
 $Ansi.Fg | Add-Member -MemberType ScriptMethod -Name "Rgb" -Force -Value {
     param (
         [int] $r,
@@ -118,6 +140,25 @@ $Ansi.Fg | Add-Member -MemberType ScriptMethod -Name "Rgb" -Force -Value {
     )
 
     return "$ESC[38;2;$($r);$($g);$($b)m"
+}
+
+$Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Color" -Force -Value {
+    param (
+        [System.Drawing.Color] $color
+    )
+
+    return "$ESC[42;2;$($color.R);$($color.G);$($color.B)m"    
+}
+
+$Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Hex" -Force -Value {
+    param (
+        [string] $hex
+    )
+
+    $color = [System.Drawing.ColorTranslator]::FromHtml($hex)
+    $result = "$ESC[42;2;$($color.R);$($color.G);$($color.B)m"
+
+    return $result
 }
 
 $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Rgb" -Force -Value {

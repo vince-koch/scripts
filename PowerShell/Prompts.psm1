@@ -2,6 +2,7 @@
 # Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
 
 Import-Module $PSScriptRoot\Ansi.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Colors.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\NerdFont.psm1 -DisableNameChecking -Force
 
 class TimeSpanUtils {
@@ -25,12 +26,6 @@ class TimeSpanUtils {
 }
 
 class PromptSegment {
-    static $Ansi
-
-    static PromptSegment() {
-        [PromptSegment]::Ansi = Get-Ansi
-    }
-
     [string] $color
     [string] $icon
     [string] $text
@@ -87,6 +82,12 @@ class PromptSegment {
         return $result
     }
 
+    static $Ansi
+
+    static PromptSegment() {
+        [PromptSegment]::Ansi = Get-Ansi
+    }
+
     static [PromptSegment] Empty() {
         return [PromptSegment]::new()
     }
@@ -131,14 +132,14 @@ class PromptSegment {
         return $segment
     }
 
-    static [PromptSegment] IsAdmin([string] $icon) {
+    static [PromptSegment] IsAdmin([string] $color, [string] $icon) {
         # admin indicator
         $isAdmin = (New-Object Security.Principal.WindowsPrincipal ([Security.Principal.WindowsIdentity]::GetCurrent())).IsInRole([Security.Principal.WindowsBuiltinRole]::Administrator)
         if ($isAdmin) {
             [PromptSegment] $segment = [PromptSegment]::new()
-            $segment.color = [PromptSegment]::Ansi.Fg.BrightRed
+            $segment.color = $color
             $segment.icon = $icon
-            $segment.text = "ADMIN"
+            $segment.text = " ADMIN "
 
             return $segment
         }
@@ -182,7 +183,7 @@ class PromptSegment {
         return $segment
     }
 
-    static [PromptSegment] GitBranch([string] $icon)
+    static [PromptSegment] GitBranch([string] $normalColor, [string] $warningColor, [string] $errorColor, [string] $icon)
     {
         [PromptSegment] $segment = [PromptSegment]::Empty()
 
@@ -191,13 +192,13 @@ class PromptSegment {
 
             if ($branch -eq "HEAD") {
                 # we're probably in detached HEAD state, so print the SHA
-                $segment.color = [PromptSegment]::Ansi.Fg.Red
+                $segment.color = $errorColor
                 $segment.icon = $icon
                 $segment.text = git rev-parse --short HEAD
             }
             elseif ($branch) {
                 # we're on an actual branch, so print it
-                $segment.color = [PromptSegment]::Ansi.Fg.Blue
+                $segment.color = $normalColor
                 $segment.icon = $icon
                 $segment.text = $branch
             }
@@ -205,13 +206,13 @@ class PromptSegment {
         catch {
             if ("$error".StartsWith("The term 'git' is not recognized")) {
                 # we don't have git - or it's not on path
-                $segment.color = [PromptSegment]::Ansi.Fg.Red
+                $segment.color = $errorColor
                 $segment.icon = $icon
                 $segment.text = "git not found!"
             }
             else {
                 # we'll end up here if we're in a newly initiated git repo
-                $segment.color = [PromptSegment]::Ansi.Fg.Yellow
+                $segment.color = $warningColor
                 $segment.icon = $icon
                 $segment.text = "no branches yet"
             }
@@ -222,37 +223,36 @@ class PromptSegment {
 }
 
 function Prompt-MultiLine {
-    # https://gitlab.com/jake.gillberg/nerd-fonts-glyph-list/-/raw/master/glyph-list.txt
-    # https://www.nerdfonts.com/cheat-sheet
-    $nerdfont = Get-NerdFont
     $ansi = Get-Ansi
+    $colors = Get-Colors
+    $nerdfont = Get-NerdFont
 
     Write-Host ""
-    
-    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.green, $ansi.fg.red, $nerdfont.oct_watch)
+
+    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.color($colors.Dracula.Green), $ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_cod_watch)
     if ($lastCommand.HasContent()) {
         $lastCommand.Render()
         [PromptSegment]::Space().Render()
     }
 
-    [PromptSegment]::CurrentTime($ansi.fg.brightblack, $nerdfont.mdi_clock).Render()
+    [PromptSegment]::CurrentTime($ansi.fg.color($colors.Dracula.Comment), $nerdfont.nf_fa_clock_o).Render()
     [PromptSegment]::Space().Render()
-    [PromptSegment]::ComputerName($ansi.fg.magenta, $nerdfont.custom_windows).Render()
+    [PromptSegment]::ComputerName($ansi.fg.color($colors.Dracula.Purple), $nerdfont.nf_fa_windows).Render()
     [PromptSegment]::Space().Render()
-    [PromptSegment]::UserName($ansi.fg.brightmagenta, $nerdfont.fa_user).Render()
+    [PromptSegment]::UserName($ansi.fg.color($colors.Dracula.Pink), $nerdfont.nf_fa_user).Render()
 
     Write-Host ""
     
-    $admin = [PromptSegment]::IsAdmin($nerdfont.fa_shield)
+    $admin = [PromptSegment]::IsAdmin($ansi.bg.color($colors.Dracula.Red), $nerdfont.nf_fa_shield)
     if ($admin.HasContent())
     {
         $admin.Render()
         [PromptSegment]::Space().Render()
     }
     
-    [PromptSegment]::CurrentFolder($ansi.fg.cyan, $nerdfont.fa_folder_open).Render()
+    [PromptSegment]::CurrentFolder($ansi.fg.color($colors.Dracula.Cyan), $nerdfont.nf_fa_folder_open).Render()
 
-    $gitBranch = [PromptSegment]::GitBranch($nerdfont.dev_git_branch)
+    $gitBranch = [PromptSegment]::GitBranch($ansi.fg.color($colors.Dracula.Orange), $ansi.fg.color($colors.Dracula.Yellow), $ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_dev_git_branch)
     if ($gitBranch.HasContent())
     {
         [PromptSegment]::Space().Render()
@@ -260,70 +260,47 @@ function Prompt-MultiLine {
     }
    
     Write-Host ""
-    [PromptSegment]::Icon($ansi.fg.red, $nerdfont.fa_bolt).Render()
+    [PromptSegment]::Icon($ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_fa_bolt).Render()
     return " "
 }
 
 function Prompt-SingleLine {
-    # https://gitlab.com/jake.gillberg/nerd-fonts-glyph-list/-/raw/master/glyph-list.txt
-    # https://www.nerdfonts.com/cheat-sheet
-    $nf_fa_shield        = "$([char]0xf132)"
-    $nf_fa_user          = "$([char]0xf007)"
-    $nf_mdi_laptop       = "$([char]0xf821)"
-    $nf_fa_folder_open   = "$([char]0xf07c)"
-    $nf_dev_git_branch   = "$([char]0xe725)"
-    $nf_oct_watch        = "$([char]0xf49b)"
-    $nf_mdi_clock        = "$([char]0xf64f)"
-    $nf_custom_windows   = "$([char]0xe62a)"
-    $nf_fa_arrow_right   = "$([char]0xf061)"
-
-    $GLYPH_SHIELD        = $nf_fa_shield
-    $GLYPH_USER          = $nf_fa_user
-    $GLYPH_COMPUTER      = $nf_mdi_laptop
-    $GLYPH_FOLDER_OPEN   = $nf_fa_folder_open
-    $GLYPH_GIT_BRANCH    = $nf_dev_git_branch
-    $GLYPH_TIMER         = $nf_oct_watch
-    $GLYPH_CLOCK         = $nf_mdi_clock
-    $GLYPH_WINDOWS       = $nf_custom_windows
-    $GLYPH_PROMPT        = $nf_fa_arrow_right
-
-    $HorizontalElipsis = [string][char]0x2026
-
-    $nerdfont = Get-NerdFont
     $ansi = Get-Ansi
+    $colors = Get-Colors
+    $nerdfont = Get-NerdFont
 
     Console-WriteHR -ForegroundColor DarkGray
 
-    $admin = [PromptSegment]::IsAdmin($nerdfont.fa_shield)
+    $admin = [PromptSegment]::IsAdmin($ansi.bg.color($colors.Dracula.Red), $nerdfont.nf_fa_shield)
     if ($admin.HasContent())
     {
         $admin.Render()
         [PromptSegment]::Space().Render()
     }
 
-    [PromptSegment]::ComputerName($ansi.fg.magenta, $nerdfont.custom_windows).Render()
+    [PromptSegment]::ComputerName($ansi.fg.magenta, $nerdfont.nf_custom_windows).Render()
     [PromptSegment]::Space().Render()
-    [PromptSegment]::UserName($ansi.fg.brightmagenta, $nerdfont.fa_user).Render()
+    [PromptSegment]::UserName($ansi.fg.brightmagenta, $nerdfont.nf_fa_user).Render()
     [PromptSegment]::Space().Render()
-    [PromptSegment]::CurrentFolder($ansi.fg.cyan, $nerdfont.fa_folder_open).Render()
+    [PromptSegment]::CurrentFolder($ansi.fg.cyan, $nerdfont.nf_fa_folder_open).Render()
 
-    $gitBranch = [PromptSegment]::GitBranch($nerdfont.dev_git_branch)
+    $gitBranch = [PromptSegment]::GitBranch($ansi.fg.color($colors.Dracula.Orange), $ansi.fg.color($colors.Dracula.Yellow), $ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_dev_git_branch)
     if ($gitBranch.HasContent())
     {
         [PromptSegment]::Space().Render()
         $gitBranch.Render()
     }
 
-    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.green, $ansi.fg.red, $nerdfont.oct_watch)
-    $currentTime = [PromptSegment]::CurrentTime($ansi.fg.brightblack, $nerdfont.mdi_clock)
-    
+    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.green, $ansi.fg.red, $nerdfont.nf_oct_watch)
+    $currentTime = [PromptSegment]::CurrentTime($ansi.fg.brightblack, $nerdfont.nf_oct_clock)
+
     $renderLength = if ($lastCommand.HasContent()) { $lastCommand.GetRenderLength() + 1 } else { 0 }
     $renderLength += $currentTime.GetRenderLength()
 
     $x = $Host.UI.RawUI.WindowSize.Width - ($renderLength + 1)
     $y = $Host.UI.RawUI.CursorPosition.Y
     $Host.UI.RawUI.CursorPosition = New-Object System.Management.Automation.Host.Coordinates ($x - 1), $y
-    
+  
     if ($lastCommand.HasContent()) {
         $lastCommand.Render()
         [PromptSegment]::Space().Render()
@@ -332,7 +309,7 @@ function Prompt-SingleLine {
     $currentTime.Render()
 
     Write-Host ""
-    [PromptSegment]::Icon($ansi.fg.red, $nerdfont.fa_bolt).Render()
+    [PromptSegment]::Icon($ansi.fg.red, $nerdfont.nf_fa_bolt).Render()
     return " "
 }
 
