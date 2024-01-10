@@ -3,6 +3,8 @@
 # 
 # https://www.nerdfonts.com/cheat-sheet
 # https://raw.githubusercontent.com/ryanoasis/nerd-fonts/master/css/nerd-fonts-generated.css
+# 
+# THIS IS A GENERATED FILE, DO NOT EDIT MANUALLY!
 
 [PsCustomObject] $NerdFont = [PsCustomObject] @{
     nf_cod_account = "$([char]::ConvertFromUtf32(0xeb99))"
