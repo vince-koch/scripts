@@ -184,5 +184,7 @@ if (Get-Module -ListAvailable -Name Terminal-Icons) {
 else {
     Write-Host "Terminal-Icons module is not installed.  Please run the following command" -ForegroundColor Red
     Write-Host "Install-Module -Name Terminal-Icons -Repository PSGallery" -ForegroundColor DarkGray
-    $PSStyle.FileInfo.Directory = "`e[94;3;4m"
+    if (Ps-IsCore) {
+        $PSStyle.FileInfo.Directory = "`e[94;3;4m"
+    }
 }

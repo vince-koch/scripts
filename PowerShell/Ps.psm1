@@ -1,3 +1,8 @@
+function Ps-IsCore {
+    $isCore = $PSVersionTable.PSEdition -eq "Core"
+    return $isCore
+}
+
 function Ps-RestartCommand {
     param (
         [string] $command

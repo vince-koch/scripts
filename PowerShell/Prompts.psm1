@@ -229,7 +229,7 @@ function Prompt-MultiLine {
 
     Write-Host ""
 
-    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.color($colors.Dracula.Green), $ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_cod_watch)
+    $lastCommand = [PromptSegment]::LastCommand($ansi.fg.color($colors.Dracula.Green), $ansi.fg.color($colors.Dracula.Red), $nerdfont.nf_oct_stopwatch)
     if ($lastCommand.HasContent()) {
         $lastCommand.Render()
         [PromptSegment]::Space().Render()
