@@ -1,3 +1,8 @@
+# Usage
+# Import-Module $PSScriptRoot\Monitor.psm1 -DisableNameChecking -Force
+
+Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Drawing") 
 [void] [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms") 
 

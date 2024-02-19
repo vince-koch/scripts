@@ -73,4 +73,37 @@ function Env {
     }
 }
 
+function Environment-PathAdd {
+    param (
+        [Parameter()] [string] $Value
+    )
+
+    [string[]] $pathArray = $env:PATH.Split(';')
+
+    $pathArray = $pathArray.Where({ -Not [string]::Equals($_, $Value, "OrdinalIgnoreCase") })
+    $pathArray += $Value
+
+    $path = [string]::Join(";", $pathArray)
+    $env:PATH = $path
+}
+
+function Environment-PathRemove {
+    param (
+        [Parameter()] [string] $Value
+    )
+
+    [string[]] $pathArray = $env:PATH.Split(';')
+    $pathArray = $pathArray.Where({ -Not [string]::Equals($_, $Value, "OrdinalIgnoreCase") })
+
+    [string] $path = [string]::Join(";", $pathArray)
+    $env:PATH=$path
+}
+
+function Environment-PathPrint {
+    $env:PATH
+}
+
 Export-ModuleMember -Function Env
+Export-ModuleMember -Function Environment-PathAdd
+Export-ModuleMember -Function Environment-PathRemove
+Export-ModuleMember -Function Environment-PathPrint

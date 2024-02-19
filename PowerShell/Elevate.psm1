@@ -26,4 +26,5 @@ function Is-Elevated {
 }
 
 Export-ModuleMember -Function Ensure-Elevated
+Export-ModuleMember -Function Ensure-Elevated -Alias elevate
 Export-ModuleMember -Function Is-Elevated
