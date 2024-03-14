@@ -77,7 +77,7 @@ Set-Alias -Name unzip -Value Expand-Archive
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Environment.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Monitor.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Jira.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
