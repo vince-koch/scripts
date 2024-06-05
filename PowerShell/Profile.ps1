@@ -75,6 +75,7 @@ function Update-PowerShell {
 Set-Alias -Name unzip -Value Expand-Archive
 
 Import-Module $PSScriptRoot\Environment.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Monitor.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
