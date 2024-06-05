@@ -74,21 +74,19 @@ function Update-PowerShell {
 
 Set-Alias -Name unzip -Value Expand-Archive
 
+Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Environment.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Monitor.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Jira.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
 
-# add $PSScriptRoot to the path, and some aliases for loose ps1 files
+# add $PSScriptRoot to the path
 $env:Path += ";$PSScriptRoot"
-Set-Alias -Name move-windows -Value Move-WindowsToScreen
-Set-Alias -Name move-to-screen -Value Move-WindowsToScreen
 
 # set prompt
 function Global:Prompt {

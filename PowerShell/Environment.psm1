@@ -20,6 +20,7 @@ function Env-Set {
         [string] $value
     )
 
+	# Creates, modifies, or deletes an environment variable stored in the current process.
     [Environment]::SetEnvironmentVariable($name, $value)
 
     Write-Host "Variable " -NoNewLine
@@ -34,6 +35,7 @@ function Env-UnSet {
         [string] $name
     )
 
+	# Creates, modifies, or deletes an environment variable stored in the current process.
     [Environment]::SetEnvironmentVariable($name, $null)
 
     Write-Host "Variable " -NoNewLine
@@ -73,4 +75,47 @@ function Env {
     }
 }
 
+function Environment-PathAdd {
+    param (
+        [Parameter()] [string] $Value
+    )
+
+    [string[]] $pathArray = $env:PATH.Split(';')
+
+    $pathArray = $pathArray.Where({ -Not [string]::Equals($_, $Value, "OrdinalIgnoreCase") })
+    $pathArray += $Value
+
+    $path = [string]::Join(";", $pathArray)
+    $env:PATH = $path
+}
+
+function Environment-PathRemove {
+    param (
+        [Parameter()] [string] $Value
+    )
+
+    [string[]] $pathArray = $env:PATH.Split(';')
+    $pathArray = $pathArray.Where({ -Not [string]::Equals($_, $Value, "OrdinalIgnoreCase") })
+
+    [string] $path = [string]::Join(";", $pathArray)
+    $env:PATH=$path
+}
+
+function Environment-PathPrint {
+    $env:PATH
+}
+
+function Environment-PathList {
+	[string[]] $pathArray = $env:PATH.Split(';')
+	return $pathArray
+}
+
+Set-Alias -Name add-path -Value Environment-PathAdd
+Set-Alias -Name remove-path -Value Environment-PathRemove
+
+
 Export-ModuleMember -Function Env
+Export-ModuleMember -Function Environment-PathAdd
+Export-ModuleMember -Function Environment-PathRemove
+Export-ModuleMember -Function Environment-PathPrint
+Export-ModuleMember -Function Environment-PathList

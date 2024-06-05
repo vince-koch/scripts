@@ -8,10 +8,11 @@ function Ps-RestartCommand {
         [string] $command
     )
 
-    Start-Process -FilePath "$command" -NoNewWindow -UseNewEnvironment
+    #Start-Process -FilePath "$command" -NoNewWindow -UseNewEnvironment
+    Start-Process -FilePath "$command" -NoNewWindow
     Write-Host "Exiting parent process $PID"
     Write-Host ""
-    exit    
+    exit
 }
 
 function Ps-Restart {
