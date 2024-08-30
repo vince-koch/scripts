@@ -5,8 +5,14 @@ param (
 
 $ErrorActionPreference = "Stop"
 Add-Type -Assembly System.IO.Compression.FileSystem
-Import-Module $PSScriptRoot\Elevate.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+
+if (-not (Get-Module -Name Elevate)) {
+    Import-Module $PSScriptRoot\Elevate.psm1 -DisableNameChecking -Force
+}
+
+if (-not (Get-Module -Name Console)) {
+    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+}
 
 # ensure command elevation
 $command = $PSCommandPath

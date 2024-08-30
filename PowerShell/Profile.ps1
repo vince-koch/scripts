@@ -54,13 +54,13 @@ $env:Path += ";$PSScriptRoot"
 Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Environment.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
+Import-Module $PSScriptRoot\Files.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Jira.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
 Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Touch.psm1 -DisableNameChecking -Force
 
 Set-Alias -Name unzip -Value Expand-Archive
 

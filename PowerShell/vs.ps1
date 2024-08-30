@@ -2,8 +2,13 @@ param (
     [string] $requestedVersion = $null
 )
 
-Import-Module $PSScriptRoot\Linq.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+if (-not (Get-Module -Name Linq)) {
+    Import-Module $PSScriptRoot\Linq.psm1 -DisableNameChecking -Force
+}
+
+if (-not (Get-Module -Name Console)) {
+    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+}
 
 $Versions = @{}
 $Versions.Add("17", "2022")

@@ -1,4 +1,12 @@
-function Touch-File {
+function File-Search {
+    param(
+        [string] $Pattern = "*"
+    )
+    
+    Get-ChildItem -Path (Get-Location) -Recurse -Filter $Pattern -File
+}
+
+function File-Touch {
     param (
         [string] $Path
     )
@@ -14,6 +22,8 @@ function Touch-File {
     $file.LastAccessTime = Get-Date
 }
 
-Export-ModuleMember -Function Touch-File
+Export-ModuleMember -Function File-Search
+Export-ModuleMember -Function File-Touch
 
-Set-Alias touch Touch-File
+Set-Alias search File-Search
+Set-Alias touch File-Touch

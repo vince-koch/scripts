@@ -20,8 +20,10 @@ function Env-Set {
         [string] $value
     )
 
-	# Creates, modifies, or deletes an environment variable stored in the current process.
+	# Creates, modifies, or deletes the variable in both the current process scope
+    # so the change can take effect immediately, and be sticky for future sessions
     [Environment]::SetEnvironmentVariable($name, $value)
+    [Environment]::SetEnvironmentVariable($name, $value, "User")
 
     Write-Host "Variable " -NoNewLine
     Write-Host $name -ForegroundColor Cyan -NoNewLine
@@ -35,8 +37,10 @@ function Env-UnSet {
         [string] $name
     )
 
-	# Creates, modifies, or deletes an environment variable stored in the current process.
+	# Creates, modifies, or deletes the variable in both the current process scope
+    # so the change can take effect immediately, and be sticky for future sessions
     [Environment]::SetEnvironmentVariable($name, $null)
+    [Environment]::SetEnvironmentVariable($name, $null, "User")
 
     Write-Host "Variable " -NoNewLine
     Write-Host $name -ForegroundColor Cyan -NoNewLine

@@ -4,7 +4,10 @@ param (
     [switch] $multimon = $false
 )
 
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+if (-not (Get-Module -Name Console)) {
+    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+}
+
 $ErrorActionPreference = "Stop"
 
 function ShowHelp() {

@@ -1,7 +1,9 @@
 # USAGE
 # Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
 
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+if (-not (Get-Module -Name Console)) {
+    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
+}
 
 function Git-ChangeBranch {
     # get a list of branches
