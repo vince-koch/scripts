@@ -147,7 +147,7 @@ $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Color" -Force -Value {
         [System.Drawing.Color] $color
     )
 
-    return "$ESC[42;2;$($color.R);$($color.G);$($color.B)m"    
+    return "$ESC[48;2;$($color.R);$($color.G);$($color.B)m"    
 }
 
 $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Hex" -Force -Value {
@@ -156,7 +156,7 @@ $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Hex" -Force -Value {
     )
 
     $color = [System.Drawing.ColorTranslator]::FromHtml($hex)
-    $result = "$ESC[42;2;$($color.R);$($color.G);$($color.B)m"
+    $result = "$ESC[48;2;$($color.R);$($color.G);$($color.B)m"
 
     return $result
 }
