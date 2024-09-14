@@ -34,4 +34,4 @@ function Starship-Use-Preset {
     }
 }
 
-Invoke-Expression (&starship init poershell)
+Invoke-Expression (&starship init powershell)
