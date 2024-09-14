@@ -1,6 +1,6 @@
-Import-Module $PSScriptRoot\Ansi.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Colors.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
+Try-Import-Module $PSScriptRoot\Ansi.psm1
+Try-Import-Module $PSScriptRoot\Colors.psm1
+Try-Import-Module $PSScriptRoot\Git.psm1
 
 $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Separator" -Force -Value {
     param (
@@ -19,6 +19,7 @@ $Ansi.Bg | Add-Member -MemberType ScriptMethod -Name "Separator" -Force -Value {
     # Combine them to get the desired split background with separator
     return "$leftBg$rightBg$leftFg$separator$ESC[0m"
 }
+
 
 function Global:Git-GetStatus {
     $branch = Git-GetBranchName

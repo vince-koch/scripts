@@ -1,10 +1,5 @@
-if (-not (Get-Module -Name Console)) {
-    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-}
-
-if (-not (Get-Module -Name Linq)) {
-    Import-Module $PSScriptRoot\Linq.psm1 -DisableNameChecking -Force
-}
+Try-Import-Module $PSScriptRoot\Console.psm1
+Try-Import-Module $PSScriptRoot\Linq.psm1
 
 Add-Type -AssemblyName System.Windows.Forms
 

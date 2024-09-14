@@ -1,17 +1,6 @@
-# USAGE
-# Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
-
-if (-not (Get-Module -Name Ansi)) {
-    Import-Module $PSScriptRoot\Ansi.psm1 -DisableNameChecking -Force
-}
-
-if (-not (Get-Module -Name Colors)) {
-    Import-Module $PSScriptRoot\Colors.psm1 -DisableNameChecking -Force
-}
-
-if (-not (Get-Module -Name NerdFont)) {
-    Import-Module $PSScriptRoot\NerdFont.psm1 -DisableNameChecking -Force
-}
+Try-Import-Module $PSScriptRoot\Ansi.psm1
+Try-Import-Module $PSScriptRoot\Colors.psm1
+Try-Import-Module $PSScriptRoot\NerdFont.psm1
 
 class TimeSpanUtils {
     static [string] ToHumanLong([TimeSpan] $timeSpan) {
@@ -321,5 +310,7 @@ function Prompt-SingleLine {
     return " "
 }
 
-Export-ModuleMember -Function Prompt-MultiLine
-Export-ModuleMember -Function Prompt-SingleLine
+function Global:Prompt {
+	#return Prompt-SingleLine
+    return Prompt-MultiLine
+}
