@@ -1,6 +1,4 @@
-if (-not (Get-Module -Name Console)) {
-    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-}
+Try-Import-Module $PSScriptRoot\Console.psm1
 
 # Terminal-Icons
 if (Get-Module -ListAvailable -Name Terminal-Icons) {

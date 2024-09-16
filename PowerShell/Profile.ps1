@@ -1,33 +1,48 @@
-param (
-    [Parameter(Mandatory = $false)]
-    [string] $command = $null
-)
+# add $PSScriptRoot to the path
+$env:Path += ";$PSScriptRoot"
 
-# install command
-if ($command -eq "install") {
-    # ensure profile folder exists
-    $folder = [System.IO.Path]::GetDirectoryName($profile)
-    if (-not [System.IO.Directory]::Exists($folder)) {
-        $null = [System.IO.Directory]::CreateDirectory($folder)
+function Try-Import-Module {
+    param (
+        [string] $ModulePath
+    )
+
+    $IsDebug = $false
+    $ModuleName = [System.IO.Path]::GetFileNameWithoutExtension($ModulePath)
+    
+    if (-not (Get-Module -Name $ModuleName)) {
+        try {
+            Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
+            if ($IsDebug -eq $true) {
+                Write-Host "Loaded module '$ModuleName'" -Foreground DarkGray
+            }
+        } catch {
+            Write-Error "Failed to import module from path '$ModulePath': $_" -Foreground Red
+        }
     }
-
-    # backup profile file if it already exists
-    if ([System.IO.File]::Exists($profile)) {
-        $backup = "$($profile).backup-$($(Get-Date).Ticks)"
-
-        Write-Host "Backing up existing profile to" -NoNewLine
-        Write-Host " $backup" -ForegroundColor DarkGray
-        [System.IO.File]::Copy($profile, $backup)
+    elseif ($IsDebug -eq $true) {
+        Write-Host "Skipped module '$ModuleName'" -Foreground DarkGray
     }
-
-    # dot source this file into the profile file
-    [System.IO.File]::WriteAllText($profile, ". $PSCommandPath")
-    Write-Host "Profile has been installed" -NoNewLine
-    Write-Host " $profile" -ForegroundColor DarkGray
-
-    # all done
-    return
 }
+
+# load modules
+
+Try-Import-Module $PSScriptRoot\Console.psm1
+Try-Import-Module $PSScriptRoot\Environment.psm1
+Try-Import-Module $PSScriptRoot\Docker.psm1
+Try-Import-Module $PSScriptRoot\Files.psm1
+Try-Import-Module $PSScriptRoot\Git.psm1
+Try-Import-Module $PSScriptRoot\Console.psm1
+Try-Import-Module $PSScriptRoot\Jira.psm1
+Try-Import-Module $PSScriptRoot\Notepad++.psm1
+Try-Import-Module $PSScriptRoot\Ps.psm1
+Try-Import-Module $PSScriptRoot\Shebang.psm1
+Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
+
+# set aliases
+
+Set-Alias -Name unzip -Value Expand-Archive
+
+# random functions
 
 function Write-Colors {
     Write-Host "Black" -ForegroundColor Black
@@ -48,34 +63,9 @@ function Write-Colors {
     Write-Host "Yellow" -ForegroundColor Yellow
 }
 
-# add $PSScriptRoot to the path
-$env:Path += ";$PSScriptRoot"
-
-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Environment.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Files.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Jira.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Notepad++.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Ps.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\Shebang.psm1 -DisableNameChecking -Force
-Import-Module $PSScriptRoot\TabsToSpaces.psm1 -DisableNameChecking -Force
-
-Set-Alias -Name unzip -Value Expand-Archive
-
 # startup welcome screen
 
 . $PSScriptRoot\Profile-TerminalIcons.ps1
 . $PSScriptRoot\Profile-Welcome.ps1
 [Welcome]::DisplayWelcomeScreen()
 [Welcome]::AutoUpdate()
-
-# setup prompt
-
-Import-Module $PSScriptRoot\Prompts.psm1 -DisableNameChecking -Force
-
-function Global:Prompt {
-	#return Prompt-SingleLine
-    return Prompt-MultiLine
-}

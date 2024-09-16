@@ -1,9 +1,7 @@
 # USAGE
 # Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
 
-if (-not (Get-Module -Name Console)) {
-    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-}
+Try-Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 
 function Docker-Uninstall {
     param (
