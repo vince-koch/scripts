@@ -31,3 +31,13 @@ host: 127.0.0.1
 username: root
 password: MySqlPassword
 ```
+
+
+
+## LocalStack
+
+```
+# docker run --rm -it -p 4566:4566 -p 4510-4559:4510-4559 -e EXTRA_CORS_ALLOWED_ORIGINS=https://app.localstack.cloud. localstack/localstack:1.3.1
+
+docker run --rm -it -p 4566:4566 -p 4510-4559:4510-4559 -e EXTRA_CORS_ALLOWED_ORIGINS=https://app.localstack.cloud. localstack/localstack:3.7.1
+```
