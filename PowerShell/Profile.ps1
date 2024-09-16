@@ -26,6 +26,7 @@ function Try-Import-Module {
 
 # load modules
 
+Try-Import-Module $PSScriptRoot\Aws.psm1
 Try-Import-Module $PSScriptRoot\Console.psm1
 Try-Import-Module $PSScriptRoot\Environment.psm1
 Try-Import-Module $PSScriptRoot\Docker.psm1
