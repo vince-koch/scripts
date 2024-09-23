@@ -1,6 +1,4 @@
-if (-not (Get-Module -Name Console)) {
-    Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
-}
+Try-Import-Module $PSScriptRoot\Console.psm1
 
 function Aws-ListProfiles {
     aws configure list-profiles
@@ -17,6 +15,8 @@ function Aws-SetProfile {
         $profile = Console-Menu -Items $profiles -IgnoreEscape
     }
     
+    [Environment]::SetEnvironmentVariable("AWS_PROFILE", $profile)
+    [Environment]::SetEnvironmentVariable("AWS_PROFILE", $profile, "User")
     $Env:AWS_PROFILE = $profile
 }
 
@@ -26,6 +26,7 @@ function Aws-UnSetProfile {
 
 function Aws-Login {
     $profile = $Env:AWS_PROFILE
+    
     if ([string]::IsNullOrWhiteSpace($profile)) {
         Aws-SetProfile
     }
