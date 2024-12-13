@@ -28,15 +28,15 @@ function Try-Import-Module {
 
 Try-Import-Module $PSScriptRoot\Aws.psm1
 Try-Import-Module $PSScriptRoot\Console.psm1
-Try-Import-Module $PSScriptRoot\Environment.psm1
 Try-Import-Module $PSScriptRoot\Docker.psm1
+Try-Import-Module $PSScriptRoot\Environment.psm1
 Try-Import-Module $PSScriptRoot\Files.psm1
 Try-Import-Module $PSScriptRoot\Git.psm1
-Try-Import-Module $PSScriptRoot\Console.psm1
 Try-Import-Module $PSScriptRoot\Jira.psm1
 Try-Import-Module $PSScriptRoot\Notepad++.psm1
 Try-Import-Module $PSScriptRoot\Ps.psm1
 Try-Import-Module $PSScriptRoot\Shebang.psm1
+Try-Import-Module $PSScriptRoot\Studio3T.psm1
 Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
 
 # set aliases

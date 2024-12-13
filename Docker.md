@@ -5,7 +5,12 @@ Default Port: 27017
 
 ```
 docker run --name some-mongo-6 -p 27018:27017 -d mongo:6
+
+docker run --name mongo-7 -p 27017:27017 -d mongo:7 --replSet rs0
+docker exec mongo-7 mongosh --eval "rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: 'localhost:27017' } ] })"
 ```
+
+
 
 Once your container is up and running you can use the following connection string to access it
 ```

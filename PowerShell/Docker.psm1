@@ -74,8 +74,21 @@ function MitmProxy {
     }
 }
 
+function Docker-DotNet8 {
+    param (
+        [string] $directory = $null
+    )
+
+    if ([string]::IsNullOrWhiteSpace($directory)) {
+        $directory = ${PWD}
+    }
+
+    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash
+}
+
 Export-ModuleMember -Function Docker-Uninstall
 Export-ModuleMember -Function Docker-Start
 Export-ModuleMember -Function Docker-Stop
 Export-ModuleMember -Function Docker-Restart
 Export-ModuleMember -Function MitmProxy
+Export-ModuleMember -Function Docker-DotNet8
