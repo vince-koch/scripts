@@ -15,7 +15,8 @@ function Try-Import-Module {
             if ($IsDebug -eq $true) {
                 Write-Host "Loaded module '$ModuleName'" -Foreground DarkGray
             }
-        } catch {
+        }
+        catch {
             Write-Error "Failed to import module from path '$ModulePath': $_" -Foreground Red
         }
     }
@@ -41,7 +42,18 @@ Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
 
 # set aliases
 
-Set-Alias -Name unzip -Value Expand-Archive
+function unzip {
+    param (
+        [string]$ZipFile,
+        [string]$Destination = "."
+    )
+    Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force @Args
+}
+
+function which {
+    param([string]$name)
+    (Get-Command $name).Source
+}
 
 # random functions
 
