@@ -55,6 +55,9 @@ function which {
     (Get-Command $name).Source
 }
 
+$nuget_config = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
+
+
 # random functions
 
 function Write-Colors {
