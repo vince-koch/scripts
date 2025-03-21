@@ -14,8 +14,7 @@ function Console-Confirm {
     Write-Host $Prompt -NoNewLine
 
     $result = $null
-    while ($result -eq $null)
-    {
+    while ($result -eq $null) {
         $press = $host.ui.rawui.readkey("NoEcho,IncludeKeyDown")
         $vkeycode = $press.virtualkeycode
 
@@ -25,20 +24,17 @@ function Console-Confirm {
         if ($press.Character -eq 'N') { $result = $false }
     }
 
-    if ($result -eq $true)
-    {
+    if ($result -eq $true) {
         Write-Host "Y" -ForegroundColor $ActiveColor
     }
-    else
-    {
+    else {
         Write-Host "N" -ForegroundColor $ActiveColor
     }
 
     return $result
 }
 
-class Menu
-{
+class Menu {
     [string] $Title = $null
 
     [array] $Items
@@ -55,10 +51,8 @@ class Menu
     [System.ConsoleColor] $TitleColor = [System.ConsoleColor]::Cyan
     [System.ConsoleColor] $ActiveColor = [System.ConsoleColor]::Green
 
-    [array] Run()
-    {
-        if ($this.Items -eq $null -or $this.Items.Length -eq 0)
-        {
+    [array] Run() {
+        if ($this.Items -eq $null -or $this.Items.Length -eq 0) {
             throw "Can not invoke Menu.Run() while Menu.Items is null or empty"
         }
 
@@ -68,8 +62,7 @@ class Menu
         $this.WasExitRequested = $false
 
         $this.Draw($false)
-        while ($this.WasExitRequested -eq $false)
-        {
+        while ($this.WasExitRequested -eq $false) {
             $this.HandleKey()
             $this.Draw($true)
         }
@@ -79,8 +72,7 @@ class Menu
         return $result
     }
 
-    [void] Draw([boolean] $resetCursorPosition)
-    {
+    [void] Draw([boolean] $resetCursorPosition) {
         # ansi codes
         $Esc = [char]27
         $ClearLine = "$Esc[2K"
@@ -89,156 +81,127 @@ class Menu
 
         # calculate items to render and reset cursor position if requested to do so
         $renderCount = [System.Math]::Min($this.Items.Length + $titleLine, [System.Console]::WindowHeight - 1)
-        if ($resetCursorPosition)
-        {
+        if ($resetCursorPosition) {
             [System.Console]::CursorTop = [System.Console]::CursorTop - $renderCount
         }
 
-        if ($titleLine -gt 0)
-        {
+        if ($titleLine -gt 0) {
             Write-Host $this.Title -ForegroundColor $this.TitleColor
             $renderCount -= $titleLine
         }
 
         # calculate the appropriate start start index
         $startIndex = 0
-        if ($renderCount -lt $this.Items.Length)
-        {
+        if ($renderCount -lt $this.Items.Length) {
             $renderMid = [System.Math]::Floor($renderCount / 2)
 
-            if ($this.CurrentIndex -lt $this.Items.Length - $renderMid)
-            {
+            if ($this.CurrentIndex -lt $this.Items.Length - $renderMid) {
                 $startIndex = [System.Math]::Max($this.CurrentIndex - $renderMid, 0)
             }
-            else
-            {
+            else {
                 $startIndex = $this.Items.Length - $renderCount
             }
         }
 
         $endIndex = $startIndex + $renderCount
 
-        for ($i = $startIndex; $i -lt $endIndex; $i++)
-        {
-            if ($this.Items[$i] -ne $null)
-            {
-                if ($this.ItemsProperty -eq $null)
-                {
+        for ($i = $startIndex; $i -lt $endIndex; $i++) {
+            if ($this.Items[$i] -ne $null) {
+                if ($this.ItemsProperty -eq $null) {
                     $item = $this.Items[$i]
                 }
-                else
-                {
+                else {
                     $item = $this.ItemsProperty.Invoke( $this.Items[$i] )
                 }
 
-                if ($this.IsMultiSelect)
-                {
-                    if ($this.SelectedIndexes -contains $i)
-                    {
+                if ($this.IsMultiSelect) {
+                    if ($this.SelectedIndexes -contains $i) {
                         $item = '[x] ' + $item
                     }
-                    else
-                    {
+                    else {
                         $item = '[ ] ' + $item
                     }
                 }
 
-                if ($i -eq $this.CurrentIndex)
-                {
+                if ($i -eq $this.CurrentIndex) {
                     Write-Host "$($ClearLine)> $($item)" -ForegroundColor $this.ActiveColor
                 }
-                else
-                {
+                else {
                     Write-Host "$($ClearLine)  $($item)"
                 }
             }
         }
     }
 
-    [void] HandleKey()
-    {
+    [void] HandleKey() {
         $breakAsInput = [System.Console]::TreatControlCAsInput
         [System.Console]::TreatControlCAsInput = $true
         $keyinfo = [System.Console]::ReadKey($true)
         [System.Console]::TreatControlCAsInput = $breakAsInput
 
         # ctrl+c
-        if ($keyinfo.Modifiers -band [System.ConsoleModifiers]::Control -and $keyinfo.Key -eq [System.ConsoleKey]::C)
-        {
+        if ($keyinfo.Modifiers -band [System.ConsoleModifiers]::Control -and $keyinfo.Key -eq [System.ConsoleKey]::C) {
             $this.CurrentIndex = -1
             $this.SelectedIndexes = $null
             $this.WasExitRequested = $true
+            exit 130
         }
 
         # up arrow
-        if ($keyinfo.Key -eq [System.ConsoleKey]::UpArrow)
-        {
+        if ($keyinfo.Key -eq [System.ConsoleKey]::UpArrow) {
             $this.CurrentIndex = [System.Math]::Max($this.CurrentIndex - 1, 0)
         }
 
         # down arrow
-        if ($keyinfo.Key -eq [System.ConsoleKey]::DownArrow) 
-        {
+        if ($keyinfo.Key -eq [System.ConsoleKey]::DownArrow) {
             $this.CurrentIndex = [System.Math]::Min($this.CurrentIndex + 1, $this.Items.Length - 1)
         }
 
         # enter
-        if ($keyinfo.Key -eq [System.ConsoleKey]::Enter)
-        {
+        if ($keyinfo.Key -eq [System.ConsoleKey]::Enter) {
             $this.WasExitRequested = $true
         }
 
         # escape
-        if ($this.IgnoreEscape -eq $false -and $keyinfo.Key -eq [System.ConsoleKey]::Escape)
-        {
+        if ($this.IgnoreEscape -eq $false -and $keyinfo.Key -eq [System.ConsoleKey]::Escape) {
             $this.CurrentIndex = -1
             $this.SelectedIndexes = $null
             $this.WasExitRequested = $true
         }
 
         # space
-        if ($this.IsMultiSelect -and $keyinfo.Key -eq [System.ConsoleKey]::Spacebar)
-        {
-            if ($this.SelectedIndexes  -contains $this.CurrentIndex)
-            {
+        if ($this.IsMultiSelect -and $keyinfo.Key -eq [System.ConsoleKey]::Spacebar) {
+            if ($this.SelectedIndexes -contains $this.CurrentIndex) {
                 $this.SelectedIndexes = $this.SelectedIndexes | Where { $_ -ne $this.CurrentIndex }
             }
-            else
-            {
+            else {
                 $this.SelectedIndexes += $this.CurrentIndex
             }
         }
     }
 
-    [array] CalculateResult()
-    {
+    [array] CalculateResult() {
         # escape was pressed, return null
-        if ($this.CurrentIndex -eq -1)
-        {
+        if ($this.CurrentIndex -eq -1) {
             return $null
         }
 
         # single select
-        if ($this.IsMultiSelect -eq $false)
-        {
-            if ($this.ReturnIndex -eq $true)
-            {
+        if ($this.IsMultiSelect -eq $false) {
+            if ($this.ReturnIndex -eq $true) {
                 return $this.CurrentIndex
             }
-            else
-            {
+            else {
                 return $this.Items[$this.CurrentIndex]
             }
         }
 
         # multi-select, convert selected indexes to selected items
         $ordered = @( $this.SelectedIndexes | Sort { $_ } )
-        if ($this.ReturnIndex -eq $true)
-        {
+        if ($this.ReturnIndex -eq $true) {
             return $ordered
         }
-        else
-        {
+        else {
             $result = $this.Items[$ordered]
             return $result
         }
@@ -312,7 +275,8 @@ function Console-RunTests {
                 $wasExitRequested = $true
             }
 
-            $null { # ESC
+            $null {
+                # ESC
                 $wasExitRequested = $true
             }
 
@@ -324,19 +288,19 @@ function Console-RunTests {
 }
 
 function Console-WriteColor {
-	# cribbed from:  https://github.com/EvotecIT/PSWriteColor/blob/master/Public/Write-Color.ps1
-	param (
-		[alias ('T')] [String[]] $Text,
-		[alias ('F', 'FG', 'C', 'Color')] [ConsoleColor[]] $ForegroundColor = [ConsoleColor]::White,
-		[alias ('B', 'BG')] [ConsoleColor[]] $BackGroundColor = $null,
-		[alias('DateFormat', 'TimeFormat')] [string] $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss',
-		[switch] $NoNewLine,
-		[switch] $ShowTime
-	)
+    # cribbed from:  https://github.com/EvotecIT/PSWriteColor/blob/master/Public/Write-Color.ps1
+    param (
+        [alias ('T')] [String[]] $Text,
+        [alias ('F', 'FG', 'C', 'Color')] [ConsoleColor[]] $ForegroundColor = [ConsoleColor]::White,
+        [alias ('B', 'BG')] [ConsoleColor[]] $BackGroundColor = $null,
+        [alias('DateFormat', 'TimeFormat')] [string] $DateTimeFormat = 'yyyy-MM-dd HH:mm:ss',
+        [switch] $NoNewLine,
+        [switch] $ShowTime
+    )
 	
-	$DefaultColor = $ForegroundColor[0]
+    $DefaultColor = $ForegroundColor[0]
 	
-	if ($ShowTime) { Write-Host -Object "[$([datetime]::Now.ToString($DateTimeFormat))] " -NoNewline } # Add Time before output
+    if ($ShowTime) { Write-Host -Object "[$([datetime]::Now.ToString($DateTimeFormat))] " -NoNewline } # Add Time before output
 	
     if ($Text.Count -ne 0) {
         if ($ForegroundColor.Count -ge $Text.Count) {
@@ -344,23 +308,23 @@ function Console-WriteColor {
             if ($null -eq $BackGroundColor) {
                 for ($i = 0; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -NoNewline }
             }
-			else {
+            else {
                 for ($i = 0; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -BackgroundColor $BackGroundColor[$i] -NoNewline }
             }
         }
-		else {
+        else {
             if ($null -eq $BackGroundColor) {
                 for ($i = 0; $i -lt $ForegroundColor.Length ; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -NoNewline }
                 for ($i = $ForegroundColor.Length; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $DefaultColor -NoNewline }
             }
-			else {
+            else {
                 for ($i = 0; $i -lt $ForegroundColor.Length ; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $ForegroundColor[$i] -BackgroundColor $BackGroundColor[$i] -NoNewline }
                 for ($i = $ForegroundColor.Length; $i -lt $Text.Length; $i++) { Write-Host -Object $Text[$i] -ForegroundColor $DefaultColor -BackgroundColor $BackGroundColor[0] -NoNewline }
             }
         }
     }
 	
-	if ($NoNewLine -eq $true) { Write-Host -NoNewline } else { Write-Host } # Support for no new line
+    if ($NoNewLine -eq $true) { Write-Host -NoNewline } else { Write-Host } # Support for no new line
 }
 
 function Console-WriteHR {
