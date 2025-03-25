@@ -5,7 +5,7 @@ function Starship-Use-Preset {
         [string] $Preset = $null
     )
 
-    [string] $presetFolder  = [System.IO.Path]::Combine($PSScriptRoot, 'starship-presets', 'toml')
+    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, 'starship-presets', 'toml')
 
     if ([string]::IsNullOrWhiteSpace($Preset)) {
         $presets = [System.IO.Directory]::GetFiles($presetFolder, "*.toml")
@@ -27,9 +27,9 @@ function Starship-Use-Preset {
             [Environment]::SetEnvironmentVariable("STARSHIP_CONFIG", $fullPresetPath, "User")
         }
         else {
-            Write-Host "err: " -Foreground Red -NoNewLine
+            Write-Host "err: " -ForegroundColor Red -NoNewLine
             Write-Host "Unable to find a preset named " -NoNewLine
-            Write-Host $Preset -Foreground Yellow
+            Write-Host $Preset -ForegroundColor Yellow
         }
     }
 }

@@ -13,15 +13,15 @@ function Try-Import-Module {
         try {
             Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
             if ($IsDebug -eq $true) {
-                Write-Host "Loaded module '$ModuleName'" -Foreground DarkGray
+                Write-Host "Loaded module '$ModuleName'" -ForegroundColor DarkGray
             }
         }
         catch {
-            Write-Error "Failed to import module from path '$ModulePath': $_" -Foreground Red
+            Write-Error "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
         }
     }
     elseif ($IsDebug -eq $true) {
-        Write-Host "Skipped module '$ModuleName'" -Foreground DarkGray
+        Write-Host "Skipped module '$ModuleName'" -ForegroundColor DarkGray
     }
 }
 
