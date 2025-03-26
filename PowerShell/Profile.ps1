@@ -17,7 +17,7 @@ function Try-Import-Module {
             }
         }
         catch {
-            Write-Error "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
+            Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
         }
     }
     elseif ($IsDebug -eq $true) {
