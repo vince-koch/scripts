@@ -47,9 +47,9 @@ function List-Bookmarks {
         $json = Get-Content $bookmarkFile -Raw
         $bookmarks = $json | ConvertFrom-Json
 
-        $bookmarks.PSObject.Properties
-        | Sort-Object Name
-        | ForEach-Object {
+        $bookmarks.PSObject.Properties |
+        Sort-Object Name |
+        ForEach-Object {
             Write-Host ("{0,-20} => {1}" -f $_.Name, $_.Value)
         }
     }
