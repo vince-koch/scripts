@@ -4,7 +4,7 @@ function Env-List {
 
 function Env-Get {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $name
     )
 
@@ -13,14 +13,14 @@ function Env-Get {
 
 function Env-Set {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $name,
 
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $value
     )
 
-	# Creates, modifies, or deletes the variable in both the current process scope
+    # Creates, modifies, or deletes the variable in both the current process scope
     # so the change can take effect immediately, and be sticky for future sessions
     [Environment]::SetEnvironmentVariable($name, $value)
     [Environment]::SetEnvironmentVariable($name, $value, "User")
@@ -33,12 +33,13 @@ function Env-Set {
 
 function Env-UnSet {
     param (
-        [Parameter(Mandatory=$true)]
+        [Parameter(Mandatory = $true)]
         [string] $name
     )
 
-	# Creates, modifies, or deletes the variable in both the current process scope
+    # Creates, modifies, or deletes the variable in both the current process scope
     # so the change can take effect immediately, and be sticky for future sessions
+    Remove-Item -Path Env:$name
     [Environment]::SetEnvironmentVariable($name, $null)
     [Environment]::SetEnvironmentVariable($name, $null, "User")
 
@@ -59,13 +60,13 @@ function Env-Help {
 
 function Env {
     param (
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $command = "list",
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $name = $null,
 
-        [Parameter(Mandatory=$false)]
+        [Parameter(Mandatory = $false)]
         [string] $value = $null
     )
 
@@ -102,7 +103,7 @@ function Environment-PathRemove {
     $pathArray = $pathArray.Where({ -Not [string]::Equals($_, $Value, "OrdinalIgnoreCase") })
 
     [string] $path = [string]::Join(";", $pathArray)
-    $env:PATH=$path
+    $env:PATH = $path
 }
 
 function Environment-PathPrint {
@@ -110,8 +111,8 @@ function Environment-PathPrint {
 }
 
 function Environment-PathList {
-	[string[]] $pathArray = $env:PATH.Split(';')
-	return $pathArray
+    [string[]] $pathArray = $env:PATH.Split(';')
+    return $pathArray
 }
 
 Set-Alias -Name add-path -Value Environment-PathAdd

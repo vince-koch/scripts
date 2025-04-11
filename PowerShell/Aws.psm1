@@ -4,37 +4,108 @@ function Aws-ListProfiles {
     aws configure list-profiles
 }
 
-function Aws-SetProfile {
+function Aws-SelectProfile {
     param (
-        [string] $profile = $null
+        [string] $profileName = $null
     )
+
+    $profileNames = & aws configure list-profiles | ForEach-Object { $_ }
     
-    if ([string]::IsNullOrWhiteSpace($profile)) {
-        $profiles = & aws configure list-profiles | ForEach-Object { $_ }
-        
-        $profile = Console-Menu -Items $profiles -IgnoreEscape
-    }
-    
-    [Environment]::SetEnvironmentVariable("AWS_PROFILE", $profile)
-    [Environment]::SetEnvironmentVariable("AWS_PROFILE", $profile, "User")
-    $Env:AWS_PROFILE = $profile
+    $useIndex = -not [string]::IsNullOrWhiteSpace($profileName) -and ($profileNames -contains $profileName)
+    $currentIndex = $useIndex ? [array]::IndexOf($profileNames, $profileName) : 0
+
+    $selectedProfileName = Console-Menu -Items $profileNames -CurrentIndex $currentIndex -IgnoreEscape
+
+    return $selectedProfileName
 }
 
-function Aws-UnSetProfile {
-    Remove-Item Env:AWS_PROFILE
+function Aws-SetVariable {
+    param (
+        [string] $VariableName,
+        $VariableValue # no cast so we can accept null
+    )
+
+    # Set for future sessions (persistent for current user)
+    [Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "User")
+
+    # Set for current process
+    [System.Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "Process")
+
+    # Set for current process (PowerShell session and child processes)
+    if ($VariableValue -eq $null) {
+        Remove-Item -Path Env:$VariableName
+    }
+    else {
+        Set-Item -Path Env:$VariableName -Value $VariableValue
+    }
+}
+
+function Aws-ClearProfileVariables {
+    Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $null
+}
+
+function Aws-ExportProfileVariables {
+    param (
+        [string] $profileName = $null
+    )
+
+    if ([string]::IsNullOrWhiteSpace($profileName)) {
+        $profileName = $Env:AWS_PROFILE
+    }
+
+    $json = aws configure export-credentials --profile $profileName --format process | ConvertFrom-Json
+    # $json
+
+    Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $profileName
+    Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $json.AccessKeyId
+    Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $json.SecretAccessKey
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $json.SessionToken
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $json.Expiration
 }
 
 function Aws-Login {
-    <#
-    $profile = $Env:AWS_PROFILE
-    
-    if ([string]::IsNullOrWhiteSpace($profile)) {
-        Aws-SetProfile
+    param (
+        [string] $profileName = $null
+    )
+
+    Aws-ClearProfileVariables
+
+    $profileName = Aws-SelectProfile $profileName
+
+    aws sso login --profile $profileName
+
+    $isAuthenticated = Aws-IsAuthenticated -profileName $profileName
+    if ($isAuthenticated -eq $true) {
+        Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $profileName
+        #Aws-ExportProfileVariables -profileName $profileName
     }
-    #>
-    Aws-SetProfile
-    
-    aws sso login --profile $Env:AWS_PROFILE
+}
+
+function Aws-IsAuthenticated {
+    param (
+        [string] $profileName = $null
+    )
+
+    try {
+        if ([string]::IsNullOrWhiteSpace($profileName)) {
+            $profileName = $Env:AWS_PROFILE
+        }
+
+        $output = aws sts get-caller-identity --profile $profileName 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            $true
+        }
+        else {
+            $false
+        }
+    }
+    catch {
+        $false
+    }
 }
 
 function Aws-LocalStack {
@@ -49,9 +120,10 @@ function Aws-LocalStack {
 New-Alias -Name awslocal -Value Aws-LocalStack -Force
 
 Export-ModuleMember -Function Aws-ListProfiles
-Export-ModuleMember -Function Aws-SetProfile
-Export-ModuleMember -Function Aws-UnSetProfile
+Export-ModuleMember -Function Aws-ClearProfileVariables
+Export-ModuleMember -Function Aws-ExportProfileVariables
 Export-ModuleMember -Function Aws-Login
+Export-ModuleMember -Function Aws-IsAuthenticated
 Export-ModuleMember -Function Aws-LocalStack
 
 Export-ModuleMember -Alias awslocal
