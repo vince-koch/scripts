@@ -12,7 +12,12 @@ function Aws-SelectProfile {
     $profileNames = & aws configure list-profiles | ForEach-Object { $_ }
     
     $useIndex = -not [string]::IsNullOrWhiteSpace($profileName) -and ($profileNames -contains $profileName)
-    $currentIndex = $useIndex ? [array]::IndexOf($profileNames, $profileName) : 0
+    if ($useIndex) {
+        $currentIndex = [array]::IndexOf($profileNames, $profileName)
+    }
+    else {
+        $currentIndex = 0
+    }
 
     $selectedProfileName = Console-Menu -Items $profileNames -CurrentIndex $currentIndex -IgnoreEscape
 

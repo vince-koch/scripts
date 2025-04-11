@@ -2,9 +2,7 @@ class Welcome {
     static [void] DisplayWelcomeScreen() {
         # print current powershell version
         $psVersion = (Get-Host).Version
-        if ($psVersion.Major -lt 6) {
-            Write-Host "PowerShell $($PsVersion.Major).$($PsVersion.Minor)"
-        }
+        Write-Host "PowerShell $($PsVersion.Major).$($PsVersion.Minor)"
 
         try {
             Push-Location $PSScriptRoot
