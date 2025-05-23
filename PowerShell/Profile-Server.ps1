@@ -30,10 +30,6 @@ function Install-Files {
         Invoke-WebRequest -Uri $rawUrl -OutFile $outputPath -UseBasicParsing -ErrorAction Stop
     }
 
-    # # install modules
-    # Write-Host "Installing PSColors"
-    # Install-Module PSColors -Force -AllowClobber
-
     # create $profile
     Write-Host "Creating `$profile"
     $psEnvProfileFile = [System.IO.Path]::Combine($psEnvDirectory, $ProfileFile)
@@ -43,24 +39,6 @@ function Install-Files {
 }
 
 
-# function Try-Import-Module {
-#     param (
-#         [string] $ModulePath
-#     )
-#
-#     $IsDebug = $false
-#     $ModuleName = [System.IO.Path]::GetFileNameWithoutExtension($ModulePath)
-#    
-#     if (-not (Get-Module -Name $ModuleName)) {
-#         try {
-#             Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
-#             Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine; Write-Host $ModuleName
-#         }
-#         catch {
-#             Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
-#         }
-#     }
-# }
 function Try-Import-Module {
     param (
         [Parameter(Mandatory)]
@@ -78,8 +56,7 @@ function Try-Import-Module {
     if (-not $alreadyLoaded) {
         try {
             Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
-            Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine
-            Write-Host ([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))
+            Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))"
         }
         catch {
             Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
@@ -105,7 +82,7 @@ function Write-Colors {
 
 
 function CustomPrompt {
-	$lastExit = if ($?) { "✓" } else { "✗" }
+    $lastExit = if ($?) { "✓" } else { "✗" }
     $lastExitColor = if ($?) { "Green" } else { "Red" }
 
     Write-Host "PS" -ForegroundColor Blue -NoNewLine                                            # powershell indicator
@@ -137,8 +114,6 @@ if ($MyInvocation.MyCommand.Path -eq $null) {
 }
 else {
     Welcome
-
-    # Import-Module PSColors # https://mtreit.com/powershell/2019/02/11/ATouchOfColor.html
 
     Try-Import-Module $PSScriptRoot\Aws.psm1
     Try-Import-Module $PSScriptRoot\Bookmark.psm1
