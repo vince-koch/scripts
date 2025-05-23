@@ -1,5 +1,7 @@
 # Invoke-Expression (& { (Invoke-WebRequest -Uri https://raw.githubusercontent.com/vince-koch/scripts/refs/heads/main/PowerShell/Profile-Server.ps1 -UseBasicParsing).Content })
 
+Write-Host "Checkpoint 1" -ForegroundColor Green
+
 
 function Welcome {
     $edition = if ($PSVersionTable.PSEdition -eq "Desktop") { "Windows PowerShell" } else { "PowerShell Core" }
@@ -9,6 +11,7 @@ function Welcome {
     Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Cyan
 }
 
+Write-Host "Checkpoint 2" -ForegroundColor Green
 
 function Install-Files {
     param (
@@ -39,6 +42,7 @@ function Install-Files {
     $null = [System.IO.File]::WriteAllText("$($profile)", ". $($psEnvProfileFile)")
 }
 
+Write-Host "Checkpoint 3" -ForegroundColor Green
 
 function Try-Import-Module {
     param (
@@ -48,17 +52,18 @@ function Try-Import-Module {
     $IsDebug = $false
     $ModuleName = [System.IO.Path]::GetFileNameWithoutExtension($ModulePath)
     
-    if (-not (Get-Module -Name $ModuleName)) {
-        try {
-            Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
-            Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine; Write-Host $ModuleName
-        }
-        catch {
-            Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
-        }
-    }
+    #if (-not (Get-Module -Name $ModuleName)) {
+    #    try {
+    #        Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
+    #        Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine; Write-Host $ModuleName
+    #    }
+    #    catch {
+    #        Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
+    #    }
+    #}
 }
 
+Write-Host "Checkpoint 4" -ForegroundColor Green
 
 function CustomPrompt {
 	$lastExit = if ($?) { "✓" } else { "✗" }
@@ -75,8 +80,11 @@ function CustomPrompt {
     Return " "
 }
 
+Write-Host "Checkpoint 5" -ForegroundColor Green
 
 if ($MyInvocation.MyCommand.Path -eq $null) {
+    Write-Host "Checkpoint 6" -ForegroundColor Green
+
     Welcome
     
     Install-Files -Files @(
@@ -90,6 +98,8 @@ if ($MyInvocation.MyCommand.Path -eq $null) {
     . $profile
 }
 else {
+    Write-Host "Checkpoint 7" -ForegroundColor Green
+
     Welcome
 
     Import-Module PSColors # https://mtreit.com/powershell/2019/02/11/ATouchOfColor.html
@@ -103,3 +113,5 @@ else {
 
     function Prompt { CustomPrompt }
 }
+
+Write-Host "Checkpoint 8" -ForegroundColor Green
