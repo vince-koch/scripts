@@ -141,7 +141,7 @@ function Bookmark {
             Remove-Bookmark -Name $Args[0]
         }
 
-        '' {
+        { $_ -in '--help', 'help', '' } {
             Write-Host "Usage:" -ForegroundColor Yellow
             Write-Host "  Bookmark save <name>     # Save current location"
             Write-Host "  Bookmark add <name>      # (alias for save)"
