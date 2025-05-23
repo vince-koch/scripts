@@ -94,18 +94,24 @@ function CustomPrompt {
 }
 
 
+function CustomPsStyle {
+    if ($isCore = $PSVersionTable.PSEdition -eq "Core") {
+        # fix default directory coloring as best we can quickly and easily
+        $PSStyle.FileInfo.Directory = "`e[94;3;4m"
+    }
+}
+
+
 if ($MyInvocation.MyCommand.Path -eq $null) {
     Welcome
     
-    $files = @(
+    Install-Files -ProfileFile "Profile-Server.ps1" -Files @(
         "Aws.psm1",
         "Bookmark.psm1",
         "Console.psm1",
         "Notepad++.psm1",
         "Profile-Server.ps1"
     )
-
-    Install-Files -Files $files -ProfileFile "Profile-Server.ps1"
 
     . $profile
 }
@@ -116,8 +122,10 @@ else {
     Try-Import-Module $PSScriptRoot\Bookmark.psm1
     Try-Import-Module $PSScriptRoot\Console.psm1
     Try-Import-Module $PSScriptRoot\Notepad++.psm1
+
     $env:Path += ";$PSScriptRoot"
     $env:Path += ";D:\ETL\Tools\aws\2.15.12"
 
+    CustomPsStyle
     function Prompt { CustomPrompt }
 }
