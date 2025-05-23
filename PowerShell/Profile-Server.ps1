@@ -27,7 +27,8 @@ function Install-Files {
         $outputPath = [System.IO.Path]::Combine($Home, ".ps-env", $file)
         $outputDirectory = [System.IO.Path]::GetDirectoryName($outputPath)
         $null = [System.IO.Directory]::CreateDirectory($outputDirectory)
-        Invoke-WebRequest -Uri $rawUrl -OutFile $outputPath -UseBasicParsing -ErrorAction Stop
+        $response = Invoke-WebRequest -Uri $rawUrl -UseBasicParsing -ErrorAction Stop
+        [System.IO.File]::WriteAllText($outputPath, $response.Content, [System.Text.Encoding]::UTF8)
     }
 
     # create $profile
