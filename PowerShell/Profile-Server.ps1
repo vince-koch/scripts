@@ -27,7 +27,7 @@ function Install-Files {
     foreach ($file in $Files) {
         $rawUrl = "https://raw.githubusercontent.com/vince-koch/scripts/refs/heads/main/PowerShell/$($file)"
         $outputPath = [System.IO.Path]::Combine($Home, ".ps-env", $file)
-        $outputDirectory = [System.IO.Directory]::GetDirectoryName($outputPath)
+        $outputDirectory = [System.IO.Path]::GetDirectoryName($outputPath)
         $null = [System.IO.Directory]::CreateDirectory($outputDirectory)
         Invoke-WebRequest -Uri $rawUrl -OutFile $outputPath -UseBasicParsing -ErrorAction Stop
     }
