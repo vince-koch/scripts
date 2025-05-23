@@ -88,6 +88,9 @@ function Aws-Login {
         Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $profileName
         #Aws-ExportProfileVariables -profileName $profileName
     }
+    else {
+        Write-Host "AWS Profile $($profileName) has not been properly authenticated.  Maybe check ~/.aws/config?" -ForegroundColor Red
+    }
 }
 
 function Aws-IsAuthenticated {
