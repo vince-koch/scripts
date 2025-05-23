@@ -71,10 +71,10 @@ function CustomPrompt {
 
     Write-Host "PS" -ForegroundColor Blue -NoNewLine                                            # powershell indicator
     Write-Host " $lastExit" -ForegroundColor $lastExitColor -NoNewLine                          # last exit code
-	Write-Host " $([System.Environment]::UserName)" -ForegroundColor Magenta -NoNewLine         # user name
-	Write-Host " $([System.Environment]::MachineName)" -ForegroundColor DarkMagenta -NoNewLine  # machine name
-	Write-Host " $((Get-Date).ToString("HH:mm"))" -ForegroundColor DarkGray -NoNewLine          # current time
-	Write-Host " $((Get-Location).Path)" -ForegroundColor Cyan -NoNewLine                       # current folder
+    Write-Host " $([System.Environment]::UserName)" -ForegroundColor Magenta -NoNewLine         # user name
+    Write-Host " $([System.Environment]::MachineName)" -ForegroundColor DarkMagenta -NoNewLine  # machine name
+    Write-Host " $((Get-Date).ToString("HH:mm"))" -ForegroundColor DarkGray -NoNewLine          # current time
+    Write-Host " $((Get-Location).Path)" -ForegroundColor Cyan -NoNewLine                       # current folder
     Write-Host ">" -ForegroundColor Blue -NoNewLine                                             # prompt indicator
 
     Return " "
