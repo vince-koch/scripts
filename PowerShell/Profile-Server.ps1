@@ -79,8 +79,8 @@ function Write-Colors {
 
 
 function CustomPrompt {
-    $lastExit = if ($?) { "✓" } else { "✗" }
-    $lastExitColor = if ($?) { "Green" } else { "Red" }
+    if ($?) { $lastExit = "✓" } else { $lastExit = "✗" }
+    if ($?) { $lastExitColor = "Green" } else { $lastExitColor = "Red" }
 
     Write-Host "PS" -ForegroundColor Blue -NoNewLine                                            # powershell indicator
     Write-Host " $lastExit" -ForegroundColor $lastExitColor -NoNewLine                          # last exit code
