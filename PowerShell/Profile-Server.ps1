@@ -87,7 +87,9 @@ if ($MyInvocation.MyCommand.Path -eq $null) {
 
     Welcome
     
-    Install-Files -Files @(
+    Write-Host "Checkpoint 7" -ForegroundColor Green
+
+    $files = @(
         "Aws.psm1",
         "Bookmark.psm1",
         "Console.psm1",
@@ -95,12 +97,20 @@ if ($MyInvocation.MyCommand.Path -eq $null) {
         "Profile-Server.ps1"
     )
 
+    Install-Files -Files $files -ProfileFile "Profile-Server.ps1"
+
+    Write-Host "Checkpoint 8" -ForegroundColor Green
+
     . $profile
+
+    Write-Host "Checkpoint 9" -ForegroundColor Green
 }
 else {
-    Write-Host "Checkpoint 7" -ForegroundColor Green
+    Write-Host "Checkpoint 10" -ForegroundColor Green
 
     Welcome
+
+    Write-Host "Checkpoint 11" -ForegroundColor Green
 
     Import-Module PSColors # https://mtreit.com/powershell/2019/02/11/ATouchOfColor.html
 
@@ -111,7 +121,11 @@ else {
     $env:Path += ";$PSScriptRoot"
     $env:Path += ";D:\ETL\Tools\aws\2.15.12"
 
+    Write-Host "Checkpoint 12" -ForegroundColor Green
+
     function Prompt { CustomPrompt }
+
+    Write-Host "Checkpoint 13" -ForegroundColor Green
 }
 
-Write-Host "Checkpoint 8" -ForegroundColor Green
+Write-Host "Checkpoint 4" -ForegroundColor Green
