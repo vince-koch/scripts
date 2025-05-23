@@ -43,22 +43,50 @@ function Install-Files {
 }
 
 
+# function Try-Import-Module {
+#     param (
+#         [string] $ModulePath
+#     )
+#
+#     $IsDebug = $false
+#     $ModuleName = [System.IO.Path]::GetFileNameWithoutExtension($ModulePath)
+#    
+#     if (-not (Get-Module -Name $ModuleName)) {
+#         try {
+#             Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
+#             Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine; Write-Host $ModuleName
+#         }
+#         catch {
+#             Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
+#         }
+#     }
+# }
 function Try-Import-Module {
     param (
+        [Parameter(Mandatory)]
         [string] $ModulePath
     )
 
     $IsDebug = $false
-    $ModuleName = [System.IO.Path]::GetFileNameWithoutExtension($ModulePath)
-    
-    if (-not (Get-Module -Name $ModuleName)) {
+    $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
+
+    # Check if module with that path is already loaded
+    $alreadyLoaded = Get-Module | Where-Object {
+        $_.Path -and ($_.Path -eq $resolvedPath)
+    }
+
+    if (-not $alreadyLoaded) {
         try {
-            Import-Module -Name $ModulePath -DisableNameChecking -Force -ErrorAction Stop
-            Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine; Write-Host $ModuleName
+            Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
+            Write-Host "Loaded module " -ForegroundColor DarkGray -NoNewLine
+            Write-Host ([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))
         }
         catch {
-            Write-Host "Failed to import module from path '$ModulePath': $_" -ForegroundColor Red
+            Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
         }
+    }
+    elseif ($IsDebug) {
+        Write-Host "Skipped already-loaded module: $resolvedPath" -ForegroundColor DarkGray
     }
 }
 
@@ -108,6 +136,8 @@ else {
     Write-Host "Checkpoint 11" -ForegroundColor Green
 
     Import-Module PSColors # https://mtreit.com/powershell/2019/02/11/ATouchOfColor.html
+
+    Write-Host "Checkpoint 11.5" -ForegroundColor Green
 
     Try-Import-Module $PSScriptRoot\Aws.psm1
     Try-Import-Module $PSScriptRoot\Bookmark.psm1
