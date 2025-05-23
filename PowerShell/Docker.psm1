@@ -76,6 +76,7 @@ function MitmProxy {
 
 function Docker-DotNet8 {
     param (
+        [string] $shell = "/bin/bash",
         [string] $directory = $null
     )
 
@@ -83,7 +84,7 @@ function Docker-DotNet8 {
         $directory = ${PWD}
     }
 
-    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 /bin/bash
+    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 $shell
 }
 
 Export-ModuleMember -Function Docker-Uninstall

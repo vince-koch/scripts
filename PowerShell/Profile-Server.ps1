@@ -71,12 +71,9 @@ function Try-Import-Module {
 function Write-Colors {
     $colors = [Enum]::GetValues([System.ConsoleColor])
 
-    foreach ($fg in $colors) {
-        foreach ($bg in $colors) {
-            Write-Host (" FG:{0,-10} BG:{1,-10} " -f $fg, $bg) -ForegroundColor $fg -BackgroundColor $bg -NoNewline
-            Write-Host "  "
-        }
-        Write-Host "`n"
+    foreach ($color in $colors) {
+        Write-Host ("{0,-15}" -f $color) -ForegroundColor $color -NoNewLine
+        Write-Host ("{0,-15}" -f $color)
     }
 }
 
