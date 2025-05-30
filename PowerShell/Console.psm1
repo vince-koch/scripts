@@ -163,10 +163,18 @@ class Menu {
         }
 
         # escape
-        if ($this.IgnoreEscape -eq $false -and $keyinfo.Key -eq [System.ConsoleKey]::Escape) {
-            $this.CurrentIndex = -1
-            $this.SelectedIndexes = $null
-            $this.WasExitRequested = $true
+        if ($keyinfo.Key -eq [System.ConsoleKey]::Escape) {
+            if ($this.IgnoreEscape -eq $false) {
+                $this.CurrentIndex = -1
+                $this.SelectedIndexes = $null
+                $this.WasExitRequested = $true
+            }
+            else
+            {
+                Write-Host "❌ Escape is not permitted" -NoNewLine
+                Start-Sleep -Milliseconds 500
+                Write-Host "`r                                  `r" -NoNewLine
+            }
         }
 
         # space
