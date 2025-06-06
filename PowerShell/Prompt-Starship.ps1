@@ -34,4 +34,22 @@ function Starship-Use-Preset {
     }
 }
 
+function Is-VsDevShell {
+    try {
+        $commandLine = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID").CommandLine
+        return $commandLine -match 'Enter-VsDevShell'
+    }
+    catch {
+        return $false
+    }
+}
+
+if (Is-VsDevShell) {
+    $env:STARSHIP_CONFIG = "no-nerd-font"
+    Write-Host "Using no-nerd-font"
+}
+
 Invoke-Expression (&starship init powershell)
+
+
+
