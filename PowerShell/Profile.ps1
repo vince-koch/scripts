@@ -84,7 +84,7 @@ function Try-Import-Module {
     if (-not $alreadyLoaded) {
         try {
             Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
-            Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))"
+            Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
         }
         catch {
             Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
@@ -131,6 +131,7 @@ Welcome
 
 # load modules
 
+Try-Import-Module $PSScriptRoot\Alias.psm1
 Try-Import-Module $PSScriptRoot\Aws.psm1
 Try-Import-Module $PSScriptRoot\Bookmark.psm1
 Try-Import-Module $PSScriptRoot\Console.psm1
