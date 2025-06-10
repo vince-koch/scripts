@@ -1,0 +1,57 @@
+format = """\
+[╭─](fg:border)\n\
+[│](fg:border)  $directory $git_branch $git_status $cmd_duration\n\
+[│](fg:border)  $python $nodejs\n\
+[╰─](fg:border)$character\
+"""
+
+add_newline = true
+palette = "forest_synth"
+
+[palettes.forest_synth]
+border = "#3B6B59"       # pine green
+directory = "#88C0A9"    # mint
+git = "#B5A677"          # moss tan
+git_status = "#F7C59F"   # autumn glow
+python = "#A0E8AF"       # bioluminescent green
+node = "#E0FFE1"         # leaf green
+cmd = "#FF9F9F"          # warm coral
+text = "#EAEAEA"         # soft mist
+
+[directory]
+style = "fg:text bg:directory"
+format = " [](fg:directory)[ $path]($style)[](fg:directory)"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "
+read_only_style = "fg:text bg:directory"
+
+[git_branch]
+symbol = "🌿 "
+style = "fg:text bg:git"
+format = " [](fg:git)[$symbol$branch]($style)[](fg:git)"
+
+[git_status]
+style = "fg:text bg:git_status"
+format = ' [](fg:git_status)[$all_status$ahead_behind]($style)[](fg:git_status)'
+
+[python]
+symbol = "🐍 "
+style = "fg:text bg:python"
+format = " [](fg:python)[$symbol($version )($virtualenv)]($style)[](fg:python)"
+version_format = "${raw}"
+
+[nodejs]
+symbol = "🌱 "
+style = "fg:text bg:node"
+format = " [](fg:node)[$symbol$version]($style)[](fg:node)"
+version_format = "${raw}"
+
+[cmd_duration]
+min_time = 500
+style = "fg:text bg:cmd"
+format = " [](fg:cmd)[⏱ $duration]($style)[](fg:cmd)"
+
+[character]
+success_symbol = "[❯](fg:border)"
+error_symbol = "[❯](fg:red)"

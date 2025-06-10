@@ -1,0 +1,74 @@
+# A fully custom Starship preset that I’ll call “Nocturne Flux” — it’s designed to feel smooth,
+# pastel-washed, and quietly vibrant like a cyberpunk terminal in the dead of night. You'll get
+# rounded "pills" for visual modularity, pastel-on-dark colors, glyph accents that breathe, and
+# a format that reads top-down like a tech status report.
+
+format = """\
+[╭─](fg:border)\n\
+[│](fg:border)\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$time
+[╰─](fg:border)$character\
+"""
+
+add_newline = true
+palette = "nocturne_flux"
+
+[palettes.nocturne_flux]
+border = "#686868"
+directory = "#91A6FF"      # periwinkle
+git = "#FFB7C5"            # pastel pink
+git_status = "#FFD6A5"     # peach-pearl
+python = "#B5EAD7"         # mint green
+node = "#C7CEEA"           # soft lavender
+time = "#FFDAC1"           # faded rose
+text = "#E2E8F0"           # misty white-blue
+accent = "#C8A2C8"         # light purple
+
+[directory]
+style = "fg:text bg:directory"
+format = " [](fg:directory)[ $path]($style)[](fg:directory)"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " "
+read_only_style = "fg:text bg:directory"
+
+[git_branch]
+symbol = " "
+style = "fg:text bg:git"
+format = " [](fg:git)[$symbol$branch]($style)[](fg:git)"
+
+[git_status]
+style = "fg:text bg:git_status"
+format = ' [](fg:git_status)[$all_status$ahead_behind]($style)[](fg:git_status)'
+
+[python]
+symbol = " "
+style = "fg:text bg:python"
+format = " [](fg:python)[$symbol($version )($virtualenv)]($style)[](fg:python)"
+version_format = "${raw}"
+
+[nodejs]
+symbol = " "
+style = "fg:text bg:node"
+format = " [](fg:node)[$symbol$version]($style)[](fg:node)"
+version_format = "${raw}"
+
+[time]
+disabled = false
+style = "fg:text bg:time"
+format = " [](fg:time)[ $time]($style)[](fg:time)"
+time_format = "%H:%M"
+
+[cmd_duration]
+min_time = 500
+style = "fg:text bg:accent"
+format = " [](fg:accent)[ $duration]($style)[](fg:accent)"
+
+[character]
+success_symbol = "[❯](fg:accent)"
+error_symbol = "[❯](fg:red)"
