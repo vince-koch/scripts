@@ -85,7 +85,7 @@ text_light = "#26272A"
 [username]
 style_user = 'os'
 style_root = 'os_admin'
-format = '[]($style)[  mou](bg:$style fg:text_color)[]($style)'
+format = '[]($style)[ $user](bg:$style fg:text_color)[]($style)'
 disabled = false
 show_always = true
 
