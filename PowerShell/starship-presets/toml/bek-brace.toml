@@ -95,3 +95,26 @@ show_always = false
 
 [nodejs]
 format = "via [🤖 $version](bold green) "
+
+[aws]
+format = "[$symbol$profile(\\($region\\))]($style) "
+style = "bold dimmed blue"
+symbol = "☁️ "
+region_aliases = {}
+disabled = false
+
+format = """
+$username\
+$aws\
+$directory\
+$git_branch\
+$git_status\
+$python\
+$nodejs\
+$rust\
+$julia\
+$memory_usage\
+$time\
+$cmd_duration\
+$character\
+"""

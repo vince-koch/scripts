@@ -1,6 +1,7 @@
 format = """\
 [╭╴](fg:arrow)\
 $username\
+$aws\
 $directory\
 $time\
 (\
@@ -46,6 +47,7 @@ clang = "#00599D"
 duration = "yellow"
 text_color = "#EDF2F4"
 text_light = "#EDF2F4"
+aws = "#FF9900"
 
 [palettes.normal]
 arrow = "#353535"
@@ -199,3 +201,10 @@ SUSE = " "
 Ubuntu = " "
 Unknown = " "
 Windows = " "
+
+[aws]
+format = ' [](fg:aws)[$symbol($profile )(\($region\))]($style)[](fg:aws)'
+style = "bg:aws fg:text_color"
+symbol = "☁️ "
+region_aliases = {}
+disabled = false

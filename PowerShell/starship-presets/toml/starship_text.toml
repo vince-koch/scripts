@@ -1,6 +1,7 @@
 format = """\
 [╭╴](fg:arrow)\
 $username\
+$aws\
 $os\
 $git_branch\
 (\
@@ -45,6 +46,7 @@ clang = "#caf0f8"
 duration = "#ce4257"
 text_color = "#EDF2F4"
 text_light = "#26272A"
+aws = "#FF9900"
 
 # I disabled some modules (Rust, Java...) since some things aren't installed in my machine, enable them if you need.
 
@@ -163,3 +165,10 @@ style = "bg:rust fg:text_light"
 symbol = " "
 version_format = "${raw}"
 disabled=true
+
+[aws]
+format = "[ $symbol$profile(\\($region\\)) ]($style)"
+style = "bold fg:aws"
+symbol = "☁️ "
+region_aliases = {}
+disabled = false

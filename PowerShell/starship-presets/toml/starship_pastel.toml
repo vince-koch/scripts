@@ -1,6 +1,7 @@
 format = """
 $os\
 $username\
+$aws\
 $directory\
 (\
     $python\
@@ -227,3 +228,10 @@ format = '[  $duration ]($style)'
 [character]
 success_symbol = "[](fg:eighth bg:eighth)[](fg:eighth)"
 error_symbol = "[](fg:eighth bg:error)[](fg:error)"
+
+[aws]
+format = '[$symbol($profile )(\($region\))]($style)[](fg:third bg:fourth)'
+style = "bg:third fg:white"
+symbol = "☁️ "
+region_aliases = {}
+disabled = false
