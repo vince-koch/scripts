@@ -1,8 +1,8 @@
-function Env-List {
+function Environment-List {
     Get-ChildItem Env:
 }
 
-function Env-Get {
+function Environment-Get {
     param (
         [Parameter(Mandatory = $true)]
         [string] $name
@@ -11,44 +11,70 @@ function Env-Get {
     [Environment]::GetEnvironmentVariable($name)
 }
 
-function Env-Set {
+function Environment-Set {
     param (
-        [Parameter(Mandatory = $true)]
-        [string] $name,
-
-        [Parameter(Mandatory = $true)]
-        [string] $value
+        [Parameter(Mandatory = $true)] [string] $name,
+        [Parameter(Mandatory = $true)] [string] $value,
+        [switch] $silent
     )
 
+    if ($null -eq $value) {
+        if ($Silent) {
+            Environment-UnSet -name $name -Silent
+        }
+        else {
+            Environment-UnSet -name $name
+        }
+
+        return
+    }
+    
     # Creates, modifies, or deletes the variable in both the current process scope
     # so the change can take effect immediately, and be sticky for future sessions
     [Environment]::SetEnvironmentVariable($name, $value)
-    [Environment]::SetEnvironmentVariable($name, $value, "User")
+    if ($env:OS -eq 'Windows_NT') {
+        [Environment]::SetEnvironmentVariable($name, $value, "User")
+    }
 
-    Write-Host "Variable " -NoNewLine
-    Write-Host $name -ForegroundColor Cyan -NoNewLine
-    Write-Host " has been set to " -NoNewLine
-    Write-Host $value -ForegroundColor Yellow
+    if (-not $silent) {
+        Write-Host "Environment variable " -NoNewLine
+        Write-Host $name -ForegroundColor Cyan -NoNewLine
+        Write-Host " has been set to " -NoNewLine
+        Write-Host $value -ForegroundColor Yellow
+    }
 }
 
-function Env-UnSet {
+function Environment-UnSet {
     param (
-        [Parameter(Mandatory = $true)]
-        [string] $name
+        [Parameter(Mandatory = $true)] [string] $name,
+        [switch] $silent
     )
 
-    # Creates, modifies, or deletes the variable in both the current process scope
-    # so the change can take effect immediately, and be sticky for future sessions
-    Remove-Item -Path Env:$name
-    [Environment]::SetEnvironmentVariable($name, $null)
-    [Environment]::SetEnvironmentVariable($name, $null, "User")
+    # Remove from current session
+    if (Test-Path "Env:$name") {
+        Remove-Item "Env:$name" -Force
+    }
 
-    Write-Host "Variable " -NoNewLine
-    Write-Host $name -ForegroundColor Cyan -NoNewLine
-    Write-Host " has been unset"
+    # Remove from user scope via registry
+    if ($env:OS -eq 'Windows_NT') {
+        $userEnvKey = "HKCU:\Environment"
+        if (Test-Path $userEnvKey) {
+            $props = Get-ItemProperty -Path $userEnvKey
+            if ($props.PSObject.Properties.Name -contains $name) {
+                Remove-ItemProperty -Path $userEnvKey -Name $name -Force
+            }
+        }
+    }
+
+    if (-not $silent) {
+        Write-Host "Environment variable " -NoNewLine
+        Write-Host $name -ForegroundColor Cyan -NoNewLine
+        Write-Host " has been unset"
+    }
 }
 
-function Env-Help {
+
+function Environment-Help {
     Write-Host "env [command] [name] [value]"
     Write-Host "    env"
     Write-Host "    env list"
@@ -71,12 +97,12 @@ function Env {
     )
 
     switch ($command.ToLower()) {
-        "list" { Env-List }
-        "get" { Env-Get $name }
-        "set" { Env-Set $name $value }
-        "unset" { Env-Unset $name }
-        "del" { Env-Unset $name }
-        default { Env-Help }
+        "list" { Environment-List }
+        "get" { Environment-Get $name }
+        "set" { Environment-Set $name $value }
+        "unset" { Environment-Unset $name }
+        "del" { Environment-Unset $name }
+        default { Environment-Help }
     }
 }
 
@@ -118,8 +144,13 @@ function Environment-PathList {
 Set-Alias -Name add-path -Value Environment-PathAdd
 Set-Alias -Name remove-path -Value Environment-PathRemove
 
-
 Export-ModuleMember -Function Env
+
+Export-ModuleMember -Function Environment-List
+Export-ModuleMember -Function Environment-Get
+Export-ModuleMember -Function Environment-Set
+Export-ModuleMember -Function Environment-Unset
+
 Export-ModuleMember -Function Environment-PathAdd
 Export-ModuleMember -Function Environment-PathRemove
 Export-ModuleMember -Function Environment-PathPrint

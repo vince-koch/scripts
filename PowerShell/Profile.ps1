@@ -84,7 +84,9 @@ function Try-Import-Module {
     if (-not $alreadyLoaded) {
         try {
             Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
-            Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
+            if ($IsDebug) {
+                Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
+            }
         }
         catch {
             Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red

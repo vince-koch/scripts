@@ -1,4 +1,5 @@
 Try-Import-Module $PSScriptRoot\Console.psm1
+Try-Import-Module $PSScriptRoot\Environment.psm1
 
 function Aws-ListProfiles {
     aws configure list-profiles
@@ -30,27 +31,24 @@ function Aws-SetVariable {
         $VariableValue # no cast so we can accept null
     )
 
-    # Set for future sessions (persistent for current user)
-    [System.Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "User")
-
-    # Set for current process
-    [System.Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "Process")
-
-    # Set for current process (PowerShell session and child processes)
-    if ($VariableValue -eq $null) {
-        Remove-Item -Path Env:$VariableName -ErrorAction SilentlyContinue
+    if ($null -eq $VariableValue) {
+        Environment-UnSet -name $VariableName -silent
     }
     else {
-        Set-Item -Path Env:$VariableName -Value $VariableValue
+        Environment-Set -name $VariableName -value $VariableValue -silent
     }
 }
 
 function Aws-ClearVariables {
     Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $null
-    #Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $null
-    #Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $null
-    #Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $null
-    #Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $null
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $null
+
+    Write-Host "Environment variables " -NoNewline
+    Write-Host " AWS_* " -ForegroundColor Cyan -NoNewline
+    Write-Host "have been cleared"
 }
 
 function Aws-ExportVariables {
@@ -66,10 +64,14 @@ function Aws-ExportVariables {
     # $json
 
     Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $profileName
-    #Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $json.AccessKeyId
-    #Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $json.SecretAccessKey
-    #Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $json.SessionToken
-    #Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $json.Expiration
+    Aws-SetVariable -VariableName "AWS_ACCESS_KEY_ID" -VariableValue $json.AccessKeyId
+    Aws-SetVariable -VariableName "AWS_SECRET_ACCESS_KEY" -VariableValue $json.SecretAccessKey
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN" -VariableValue $json.SessionToken
+    Aws-SetVariable -VariableName "AWS_SESSION_TOKEN_EXPIRATION" -VariableValue $json.Expiration
+
+    Write-Host "Environment variables " -NoNewline
+    Write-Host " AWS_* " -ForegroundColor Cyan -NoNewline
+    Write-Host "have been set"
 }
 
 function Aws-Login {
@@ -87,10 +89,11 @@ function Aws-Login {
 
     aws sso login --profile $profileName
 
-    $isAuthenticated = Aws-IsAuthenticated -profileName $profileName
-    if ($isAuthenticated -eq $true) {
-        Aws-SetVariable -VariableName "AWS_PROFILE" -VariableValue $profileName
-        #Aws-ExportVariables -profileName $profileName
+    #Write-Host "Verifiying succssful login"
+    #$isAuthenticated = Aws-IsAuthenticated -profileName $profileName
+    #if ($isAuthenticated -eq $true) {
+    if ($LASTEXITCODE -eq 0) {
+        Aws-ExportVariables -profileName $profileName
         Write-Host "✅ Authenticated using profile " -NoNewLine
         Write-Host "$profileName" -ForegroundColor Cyan
     }
