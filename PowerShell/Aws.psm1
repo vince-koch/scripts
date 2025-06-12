@@ -31,7 +31,7 @@ function Aws-SetVariable {
     )
 
     # Set for future sessions (persistent for current user)
-    [Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "User")
+    [System.Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "User")
 
     # Set for current process
     [System.Environment]::SetEnvironmentVariable($VariableName, $VariableValue, "Process")
