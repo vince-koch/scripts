@@ -199,3 +199,90 @@ Export-ModuleMember -Function Aws-CheckToken
 Export-ModuleMember -Function Aws-LocalStack
 
 Export-ModuleMember -Alias awslocal
+
+
+
+
+
+
+function Get-S3Buckets {
+    $output = aws s3 ls 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to list buckets. Details: $output"
+    }
+
+    $output | ForEach-Object { ($_ -split '\s+', 4)[-1] }
+}
+
+function Get-S3Objects {
+    param (
+        [string] $Bucket,
+        [string] $Prefix = ''
+    )
+
+    $result = aws s3 ls "s3://$Bucket/$Prefix" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to list objects for bucket $Bucket with prefix '$Prefix'. Details: $result"
+    }
+
+    $result | ForEach-Object {
+        $parts = ($_ -split '\s+', 4)
+        if ($parts[-1] -like "*/") {
+            [PSCustomObject]@{ Name = $parts[-1]; Type = 'Folder'; Path = "s3://$Bucket/$Prefix$($parts[-1])" }
+        }
+        else {
+            [PSCustomObject]@{ Name = $parts[-1]; Type = 'File'; Path = "s3://$Bucket/$Prefix$($parts[-1])" }
+        }
+    }
+}
+
+function Browse-S3 {
+    param (
+        [string] $Bucket,
+        [string] $Prefix = ''
+    )
+
+    if (-not $Bucket) {
+        $buckets = Get-S3Buckets
+        $Bucket = Console-Menu -Items $buckets -Title "Select a bucket"
+        if (-not $Bucket) { return }
+    }
+
+    while ($true) {
+        try {
+            $items = Get-S3Objects -Bucket $Bucket -Prefix $Prefix
+        }
+        catch {
+            Write-Host $_ -ForegroundColor Red
+            break
+        }
+
+        $choices = @()
+        if ($Prefix -ne "") {
+            $choices += [PSCustomObject]@{ Name = '..'; Type = 'Folder'; Path = '' }
+        }
+        $choices += $items
+
+        $selection = Console-Menu -Items $choices -Title "Browsing s3://$Bucket/$Prefix" -ItemsProperty { param ($item) $item.Name }
+
+        if (-not $selection) { break }
+
+        if ($selection.Name -eq '..') {
+            $Prefix = ($Prefix -split '/') | Where-Object { $_ } | Select-Object -SkipLast 1 -Join '/'
+            if ($Prefix -ne '') { $Prefix += '/' }
+            continue
+        }
+
+        if ($selection.Type -eq 'Folder') {
+            $Prefix += "$($selection.Name)"
+            continue
+        }
+
+        Write-Host "`nSelected file: $($selection.Path)" -ForegroundColor Cyan
+        break
+    }
+}
+
+
+Set-Alias -Name s3 -Value Browse-S3
+Export-ModuleMember -Function Browse-S3 -Alias aws-s3
