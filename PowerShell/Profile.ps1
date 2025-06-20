@@ -61,7 +61,6 @@ function AutoUpdate {
         }
     }
     finally {
-        Write-Host ""
         Pop-Location
     }
 }
