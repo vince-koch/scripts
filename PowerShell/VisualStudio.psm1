@@ -25,8 +25,7 @@ function Handle-VisualStudioCode {
         } catch {
         }
 
-        #return $global:vscode_previous_prompt
-        return & $global:vscode_previous_prompt
+        return $global:vscode_previous_prompt
     }
 }
 
