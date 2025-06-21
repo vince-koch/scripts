@@ -96,9 +96,14 @@ function Try-Import-Module {
     }
 }
 
-# set aliases
+# random variables, functions, and aliases
 
-function unzip {
+$aws_config = [System.IO.Path]::Combine($env:USERPROFILE, ".aws", "config")
+$nuget_config = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
+function Aws-Config { npp $aws_config }
+function Nuget-Config { npp $nuget_config }
+
+function UnZip {
     param (
         [string]$ZipFile,
         [string]$Destination = "."
@@ -106,15 +111,10 @@ function unzip {
     Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force @Args
 }
 
-function which {
+function Which {
     param([string]$name)
     (Get-Command $name).Source
 }
-
-$nuget_config = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
-
-
-# random functions
 
 function Write-Colors {
     $colors = [Enum]::GetValues([System.ConsoleColor])
@@ -128,7 +128,6 @@ function Write-Colors {
 
 # startup welcome screen
 Welcome
-. $PSScriptRoot\Profile-TerminalIcons.ps1
 
 # load modules
 
@@ -146,6 +145,10 @@ Try-Import-Module $PSScriptRoot\Ps.psm1
 Try-Import-Module $PSScriptRoot\Shebang.psm1
 Try-Import-Module $PSScriptRoot\Studio3T.psm1
 Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
+Try-Import-Module $PSScriptRoot\VisualStudio.psm1
+Try-Import-Module $PSScriptRoot\Windows.psm1
+
+. $PSScriptRoot\Profile-TerminalIcons.ps1
 
 AutoUpdate
 
