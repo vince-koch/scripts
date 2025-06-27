@@ -1,21 +1,9 @@
-$script:ManifestPath = Join-Path $env:USERPROFILE ".aliases.json"
+Try-Import-Module $PSScriptRoot\Json.psm1
 
-function Get-AliasManifest {
-    if (Test-Path $script:ManifestPath) {
-        $content = Get-Content $script:ManifestPath | ConvertFrom-Json -AsHashtable
-        if ($null -eq $content) { return @{} }
-        return $content
-    } else {
-        return @{}
-    }
-}
-
-function Save-AliasManifest($data) {
-    $data | ConvertTo-Json -Depth 5 | Set-Content -Encoding UTF8 $script:ManifestPath
-}
+$script:ManifestPath = "$env:USERPROFILE\.aliases.json"
 
 function Register-AliasFunctions {
-    $aliases = Get-AliasManifest
+    $aliases = Json-LoadHashtable -Path $script:ManifestPath
     foreach ($aliasName in $aliases.Keys) {
         $exePath = $aliases[$aliasName]
         $scriptBlock = [ScriptBlock]::Create("param([Parameter(ValueFromRemainingArguments = `$true)] `$args); & '$exePath' @args")
@@ -30,23 +18,9 @@ function alias {
         [Parameter(Position = 2)] [string] $path
     )
 
-    $aliases = Get-AliasManifest
+    $aliases = Json-LoadHashtable -Path $script:ManifestPath
 
     switch ($action) {
-        'help' {
-            Write-Host "Alias Management Commands:"
-            Write-Host "------------------------"
-            Write-Host "list   - Lists all registered aliases"
-            Write-Host "add    - Adds a new alias (alias add <name> <path>)"
-            Write-Host "remove - Removes an existing alias (alias remove <name>)"
-            Write-Host "help   - Shows this help message"
-            Write-Host ""
-            Write-Host "Examples:"
-            Write-Host "  alias add notepad 'C:\Windows\notepad.exe'"
-            Write-Host "  alias remove notepad"
-            Write-Host "  alias list"
-        }
-
         'list' {
             if ($aliases.Count -eq 0) {
                 Write-Output "No aliases registered."
@@ -55,7 +29,7 @@ function alias {
 
             $aliases.Keys | ForEach-Object {
                 [PSCustomObject]@{
-                    Name = $_
+                    Alias = $_
                     Path = $aliases[$_]
                 }
             } | Format-Table -AutoSize
@@ -94,7 +68,7 @@ function alias {
             }
 
             $aliases[$name] = $resolvedPath
-            Save-AliasManifest $aliases
+            Json-SaveHashtable -Path $script:ManifestPath -Hashtable $aliases
             Register-AliasFunctions
             Write-Host "Alias '$name' added for: $resolvedPath"
         }
@@ -104,7 +78,7 @@ function alias {
                 $aliases.Remove($name) | Out-Null
                 Remove-Item -Path "Function:$name" -Force -ErrorAction SilentlyContinue
                 Remove-Item -Path "Function:Global:$name" -Force -ErrorAction SilentlyContinue
-                Save-AliasManifest $aliases
+                Json-SaveHashtable -Path $script:ManifestPath -Hashtable $aliases
                 Write-Host "Alias '$name' removed."
             } else {
                 Write-Warning "Alias '$name' not found."
@@ -112,17 +86,15 @@ function alias {
         }
 
         default {
-            Write-Host "Alias Management Commands:"
-            Write-Host "--------------------------"
-            Write-Host "list   - Lists all registered aliases"
-            Write-Host "add    - Adds a new alias (alias add <name> <path>)"
-            Write-Host "remove - Removes an existing alias (alias remove <name>)"
-            Write-Host "help   - Shows this help message"
+            Write-Host "Usage:" -ForegroundColor Yellow
+            Write-Host "    alias list                 # List saved aliases"
+            Write-Host "    alias add <name> <path>    # Adds a new alias"
+            Write-Host "    alias remove <name>        # Removes a saved alias"
             Write-Host ""
-            Write-Host "Examples:"
+            Write-Host "Examples:" -ForegroundColor Yellow
+            Write-Host "  alias list"
             Write-Host "  alias add notepad 'C:\Windows\notepad.exe'"
             Write-Host "  alias remove notepad"
-            Write-Host "  alias list"
         }
     }
 }

@@ -1,6 +1,6 @@
-$bookmarkFile = "$env:USERPROFILE\bookmarks.json"
+Try-Import-Module $PSScriptRoot\Json.psm1
 
-$bookmarkFile = "$env:USERPROFILE\bookmarks.json"
+$bookmarkFile = "$env:USERPROFILE\.bookmarks.json"
 
 function Save-Bookmark {
     [CmdletBinding()]
@@ -9,53 +9,47 @@ function Save-Bookmark {
         [string]$Name
     )
 
-    $path = Get-Location
-    $bookmarks = @{}
-
-    if (Test-Path $bookmarkFile) {
-        $json = Get-Content $bookmarkFile -Raw
-        $bookmarks = @{} + ($json | ConvertFrom-Json | ForEach-Object {
-                $_.PSObject.Properties | ForEach-Object { @{ $_.Name = $_.Value } }
-            } | Merge-Hashtables)
-    }
-
-    $bookmarks[$Name] = $path.Path
-    $bookmarks | ConvertTo-Json -Depth 10 | Set-Content $bookmarkFile
-    Write-Host "Bookmark '$Name' saved for $path" -ForegroundColor Green
+    $bookmarks = Json-LoadHashtable -Path $bookmarkFile
+    $bookmarks[$Name] = (Get-Location).Path
+    Json-SaveHashtable -Path $bookmarkFile -Hashtable $bookmarks
+    
+    Write-Host "Bookmark '$Name' saved for $($bookmarks[$Name])" -ForegroundColor Green
 }
 
 function GoTo-Bookmark {
-    param([string]$Name)
-    if (Test-Path $bookmarkFile) {
-        $json = Get-Content $bookmarkFile -Raw
-        $bookmarks = $json | ConvertFrom-Json
+    param(
+        [string] $Name
+    )
 
-        if ($bookmarks.PSObject.Properties.Name -contains $Name) {
-            Set-Location ($bookmarks.$Name)
-        }
-        else {
-            Write-Host "Bookmark '$Name' not found." -ForegroundColor Red
-        }
+    if (-not (Test-Path $bookmarkFile)) {
+        Write-Host "No bookmarks available." -ForegroundColor Yellow
+        return
+    }
+
+    $bookmarks = Json-LoadPsObject -Path $bookmarkFile
+
+    if ($bookmarks.PSObject.Properties.Name -contains $Name) {
+        Set-Location ($bookmarks.$Name)
     }
     else {
-        Write-Host "No bookmarks found!" -ForegroundColor Red
+        Write-Host "Bookmark '$Name' not found." -ForegroundColor Red
     }
 }
 
 function List-Bookmarks {
-    if (Test-Path $bookmarkFile) {
-        $json = Get-Content $bookmarkFile -Raw
-        $bookmarks = $json | ConvertFrom-Json
-
-        $bookmarks.PSObject.Properties |
-        Sort-Object Name |
-        ForEach-Object {
-            Write-Host ("{0,-20} => {1}" -f $_.Name, $_.Value)
-        }
-    }
-    else {
+    if (-not (Test-Path $bookmarkFile)) {
         Write-Host "No bookmarks available." -ForegroundColor Yellow
+        return
     }
+    
+    $bookmarks = Json-LoadHashtable -Path $bookmarkFile
+
+    $bookmarks.Keys | ForEach-Object {
+        [PSCustomObject]@{
+            Name = $_
+            Path = $bookmarks[$_]
+        }
+    } | Format-Table -AutoSize
 }
 
 function Remove-Bookmark {
@@ -64,44 +58,21 @@ function Remove-Bookmark {
         [string]$Name
     )
 
-    if (!(Test-Path $bookmarkFile)) {
-        Write-Error "No bookmarks found!"
+    if (-not (Test-Path $bookmarkFile)) {
+        Write-Host "No bookmarks available." -ForegroundColor Yellow
         return
     }
 
-    # Load existing bookmarks
-    $json = Get-Content $bookmarkFile -Raw
-    $bookmarks = $json | ConvertFrom-Json
+    $bookmarks = Json-LoadPsObject -Path $bookmarkFile
 
     if (-not $bookmarks.PSObject.Properties.Name -contains $Name) {
         Write-Error "Bookmark '$Name' not found."
         return
     }
 
-    # Remove the bookmark
     $bookmarks.PSObject.Properties.Remove($Name)
-
-    # Save updated bookmarks (or delete file if empty)
-    if ($bookmarks.PSObject.Properties.Count -eq 0) {
-        Remove-Item $bookmarkFile -Force
-        Write-Host "Bookmark '$Name' removed. No bookmarks left." -ForegroundColor Green
-    }
-    else {
-        $bookmarks | ConvertTo-Json -Depth 10 | Set-Content $bookmarkFile
-        Write-Host "Bookmark '$Name' removed." -ForegroundColor Green
-    }
-}
-
-function Merge-Hashtables {
-    param([Parameter(ValueFromPipeline = $true)]$input)
-
-    $merged = @{}
-    foreach ($h in $input) {
-        foreach ($kv in $h.GetEnumerator()) {
-            $merged[$kv.Key] = $kv.Value
-        }
-    }
-    return $merged
+    Json-SavePsObject -Path $bookmarkFile -Object $bookmarks
+    Write-Host "Bookmark '$Name' removed." -ForegroundColor Green
 }
 
 function Bookmark {
@@ -116,9 +87,11 @@ function Bookmark {
 
     switch ($Command) {
         'add' {
-            # fall through to save
-            $Command = 'save'
-            continue
+            if ($Args.Count -lt 1) {
+                Write-Error "Usage: Bookmark save <name>"
+                return
+            }
+            Save-Bookmark -Name $Args[0]
         }
 
         'save' {
@@ -141,13 +114,13 @@ function Bookmark {
             Remove-Bookmark -Name $Args[0]
         }
 
-        { $_ -in '--help', 'help', '' } {
+        { $_ -in 'help', '--help', '/help', '/?', '' } {
             Write-Host "Usage:" -ForegroundColor Yellow
-            Write-Host "  Bookmark save <name>     # Save current location"
-            Write-Host "  Bookmark add <name>      # (alias for save)"
-            Write-Host "  Bookmark list            # List saved bookmarks"
-            Write-Host "  Bookmark remove <name>   # Delete a saved bookmark"
-            Write-Host "  Bookmark <name>          # Jump to saved bookmark"
+            Write-Host "    Bookmark save <name>     # Save current location"
+            Write-Host "    Bookmark add <name>      # (alias for save)"
+            Write-Host "    Bookmark list            # List saved bookmarks"
+            Write-Host "    Bookmark remove <name>   # Delete a saved bookmark"
+            Write-Host "    Bookmark <name>          # Jump to saved bookmark"
         }
 
         default {
