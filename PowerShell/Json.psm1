@@ -9,7 +9,7 @@ function Json-LoadHashtable {
     )
 
     if (-not (Test-Path $Path)) {
-        throw "File not found: $Path"
+        return @{}
     }
 
     $json = Get-Content -Path $Path -Raw
@@ -59,7 +59,7 @@ function Json-LoadPsObject {
     )
 
     if (-not (Test-Path $Path)) {
-        throw "File not found: $Path"
+        return [PSCustomObject]@{}
     }
 
     $json = Get-Content -Path $Path -Raw

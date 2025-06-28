@@ -23,7 +23,7 @@ function alias {
     switch ($action) {
         'list' {
             if ($aliases.Count -eq 0) {
-                Write-Output "No aliases registered."
+                Write-Host "No aliases registered." -ForegroundColor Yellow
                 return
             }
 
@@ -70,7 +70,7 @@ function alias {
             $aliases[$name] = $resolvedPath
             Json-SaveHashtable -Path $script:ManifestPath -Hashtable $aliases
             Register-AliasFunctions
-            Write-Host "Alias '$name' added for: $resolvedPath"
+            Write-Host "Alias '$name' added for: $resolvedPath" -ForegroundColor Green
         }
 
         'remove' {
@@ -79,7 +79,7 @@ function alias {
                 Remove-Item -Path "Function:$name" -Force -ErrorAction SilentlyContinue
                 Remove-Item -Path "Function:Global:$name" -Force -ErrorAction SilentlyContinue
                 Json-SaveHashtable -Path $script:ManifestPath -Hashtable $aliases
-                Write-Host "Alias '$name' removed."
+                Write-Host "Alias '$name' removed." -ForegroundColor Green
             } else {
                 Write-Warning "Alias '$name' not found."
             }
