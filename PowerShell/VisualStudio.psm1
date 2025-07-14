@@ -15,18 +15,18 @@ function Handle-VisualStudioCode {
     # To combat that we will attempt to reset the horizontal buffer size each time the prompt is shown
     # And we will do it each time our prompt is run
 
-    $global:vscode_previous_prompt = global:prompt
-
-    function global:prompt {
-        try {
-            $desiredWidth = 2000
-            $bufferSize = $Host.UI.RawUI.BufferSize
-            $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size($desiredWidth, $bufferSize.Height)
-        } catch {
-        }
-
-        return $global:vscode_previous_prompt
-    }
+    # $global:vscode_previous_prompt = global:prompt
+    #
+    # function global:prompt {
+    #     try {
+    #         $desiredWidth = 2000
+    #         $bufferSize = $Host.UI.RawUI.BufferSize
+    #         $Host.UI.RawUI.BufferSize = New-Object Management.Automation.Host.Size($desiredWidth, $bufferSize.Height)
+    #     } catch {
+    #     }
+    #
+    #     return $global:vscode_previous_prompt
+    # }
 }
 
 

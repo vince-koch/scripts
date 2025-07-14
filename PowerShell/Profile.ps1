@@ -140,6 +140,7 @@ Try-Import-Module $PSScriptRoot\Environment.psm1
 Try-Import-Module $PSScriptRoot\Files.psm1
 Try-Import-Module $PSScriptRoot\Git.psm1
 Try-Import-Module $PSScriptRoot\Jira.psm1
+Try-Import-Module $PSScriptRoot\Mongo.psm1
 Try-Import-Module $PSScriptRoot\Notepad++.psm1
 Try-Import-Module $PSScriptRoot\Ps.psm1
 Try-Import-Module $PSScriptRoot\Shebang.psm1
