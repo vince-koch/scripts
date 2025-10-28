@@ -7,61 +7,21 @@ function Welcome {
 }
 
 
-function AutoUpdate {
-    param (
-        [int] $AutoUpdateCheckHours = 24
-    )
+function Start-Profile-Timer($Name) {
+    if (-not $global:ProfileTimers) { $global:ProfileTimers = @{} }
+    $global:ProfileTimers[$Name] = [System.Diagnostics.Stopwatch]::StartNew()
+}
 
-    try {
-        Push-Location $PSScriptRoot
-
-        # see if an update check is required
-        [string] $lastUpdateCheckPath = [System.IO.Path]::Combine($PSScriptRoot, "..", ".git", "update-check.txt")
-        
-        # if if we've checked for updates recently
-        if ([System.IO.File]::Exists($lastUpdateCheckPath)) {
-            $text = [System.IO.File]::ReadAllText($lastUpdateCheckPath)
-            [System.DateTime] $lastUpdateCheck = $text -as [System.DateTime]
-            if ($lastUpdateCheck -ne $null -and $lastUpdateCheck.AddHours($AutoUpdateCheckHours) -gt [System.DateTime]::Now) {
-                return
-            }
-        }
-
-        # update our last update check file
-        [System.IO.File]::WriteAllText($lastUpdateCheckPath, [System.DateTime]::Now.ToString())
-
-        # perform an update check
-        [int] $check = Git-UpdateCheck
-        if ($check -eq 1) { 
-            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
-            Write-Host "AHEAD" -ForegroundColor Yellow
-        }
-        elseif ($check -eq 0) {
-            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
-            Write-Host "CURRENT" -ForegroundColor Green
-        }
-        elseif ($check -eq -1) {
-            Write-Host " / " -ForegroundColor DarkGray -NoNewLine
-            Write-Host "UPDATE AVAILABLE" -ForegroundColor Red
-
-            $confirm = Console-Confirm -Prompt "An update is available.  Would you like to update now? [Y/n] " -Default $true
-            if ($confirm) {
-                # do the update
-                git pull
-
-                # and if it was successful restart powershell
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Host "Update successful" -ForegroundColor Green
-                    Write-Host "Restaring powerhsell is recommended" -ForegroundColor Yellow
-                }
-                else {
-                    Write-Host "Update was not successful.  Please reveiew messages above to resolve." -ForegroundColor Red
-                }
-            }
-        }
+function Stop-Profile-Timer($Name) {
+    if ($global:ProfileTimers.ContainsKey($Name)) {
+        $global:ProfileTimers[$Name].Stop()
     }
-    finally {
-        Pop-Location
+}
+
+function Print-Profile-Timers {
+    foreach ($key in $global:ProfileTimers.Keys) {
+        $timer = $global:ProfileTimers[$key]
+        Write-Host "$key took $($timer.Elapsed)"
     }
 }
 
@@ -72,36 +32,58 @@ function Try-Import-Module {
         [string] $ModulePath
     )
 
-    $IsDebug = $false
-    $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
+    Start-Profile-Timer -Name "Try-Import-Module $ModulePath"
 
-    # Check if module with that path is already loaded
-    $alreadyLoaded = Get-Module | Where-Object {
-        $_.Path -and ($_.Path -eq $resolvedPath)
-    }
+    try {
+        $IsDebug = $false
+        $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
 
-    if (-not $alreadyLoaded) {
-        try {
-            Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
-            if ($IsDebug) {
-                Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
+        # Check if module with that path is already loaded
+        $alreadyLoaded = Get-Module | Where-Object {
+            $_.Path -and ($_.Path -eq $resolvedPath)
+        }
+
+        if (-not $alreadyLoaded) {
+            try {
+                Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
+                if ($IsDebug) {
+                    Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
+                }
+            }
+            catch {
+                Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
             }
         }
-        catch {
-            Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
+        elseif ($IsDebug) {
+            Write-Host "Skipped already-loaded module: $resolvedPath" -ForegroundColor DarkGray
         }
     }
-    elseif ($IsDebug) {
-        Write-Host "Skipped already-loaded module: $resolvedPath" -ForegroundColor DarkGray
+    finally {
+        Stop-Profile-Timer -Name "Try-Import-Module $ModulePath"
     }
 }
 
+
 # random variables, functions, and aliases
 
-$aws_config = [System.IO.Path]::Combine($env:USERPROFILE, ".aws", "config")
-$nuget_config = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
+$aws_config_path = [System.IO.Path]::Combine($env:USERPROFILE, ".aws", "config")
+$nuget_config_path = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
 function Aws-Config { npp $aws_config }
 function Nuget-Config { npp $nuget_config }
+
+function Less {
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string]$Path
+    )
+
+    if (-not (Test-Path $Path)) {
+        Write-Host "File not found: $Path" -ForegroundColor Red
+        return
+    }
+
+    Get-Content -Path $Path | Out-Host -Paging
+}
 
 function UnZip {
     param (
@@ -127,10 +109,10 @@ function Write-Colors {
 
 
 # startup welcome screen
+
 Welcome
 
 # load modules
-
 Try-Import-Module $PSScriptRoot\Alias.psm1
 Try-Import-Module $PSScriptRoot\Aws.psm1
 Try-Import-Module $PSScriptRoot\Bookmark.psm1
@@ -146,12 +128,16 @@ Try-Import-Module $PSScriptRoot\Ps.psm1
 Try-Import-Module $PSScriptRoot\Shebang.psm1
 Try-Import-Module $PSScriptRoot\Studio3T.psm1
 Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
+Try-Import-Module $PSScriptRoot\UpdateCheck.psm1
 Try-Import-Module $PSScriptRoot\VisualStudio.psm1
 Try-Import-Module $PSScriptRoot\Windows.psm1
 
+Start-Profile-Timer -Name "TerminalIcons"
 . $PSScriptRoot\Profile-TerminalIcons.ps1
+Stop-Profile-Timer -Name "TerminalIcons"
 
-AutoUpdate
+# AutoUpdate
+Update-LastChecked
 
 # add $PSScriptRoot to the path
 $env:Path += ";$PSScriptRoot"

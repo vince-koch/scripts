@@ -75,13 +75,16 @@ function Get-MongoConnectionString {
 
     $encodedUsername = [Uri]::EscapeDataString($Username)
     $encodedPassword = [Uri]::EscapeDataString($Password)
-    
+    $encodedAuth = if ([string]::IsNullOrWhiteSpace($Username) -and [string]::IsNullOrWhiteSpace($Password)) { "" } else { "$([Uri]::EscapeDataString($Username)):$([Uri]::EscapeDataString($Password))@" }
+
     if ([string]::IsNullOrWhiteSpace($Username) -or [string]::IsNullOrWhiteSpace($Password)) {
         $encodedUsername = [Uri]::EscapeDataString("mongo")
         $encodedPassword = [Uri]::EscapeDataString("mongo")
     }
     
-    $connectionString = "mongodb://" + $encodedUsername + ":" + $encodedPassword + "@" + $mongoPort
+    $mongoPort = $mongoPort -replace "0.0.0.0", "127.0.0.1"
+
+    $connectionString = "mongodb://" + $encodedAuth + $mongoPort + "?directConnection=true"
     return $connectionString
 }
 
@@ -157,12 +160,12 @@ function Docker-MongoUi {
         return
     }
 
-    # $connectionString = Get-MongoConnectionString -Container $chosen
-    # if (-not $connectionString) {
-    #     return
-    # }
+    $connectionString = Get-MongoConnectionString -Container $chosen
+    if (-not $connectionString) {
+        return
+    }
 
-    # Start-MongoUi -ConnectionString $connectionString
+    Start-MongoUi -ConnectionString $connectionString
 }
 
 Export-ModuleMember -Function Docker-MongoUi, Start-MongoUi, Get-MongoContainers, Select-MongoContainer, Get-MongoConnectionString
