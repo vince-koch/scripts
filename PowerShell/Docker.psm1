@@ -87,12 +87,66 @@ function Docker-DotNet8 {
     & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 $shell
 }
 
+function Docker-DotNet8 {
+    param (
+        [string] $shell = "/bin/bash",
+        [string] $directory = $null
+    )
+
+    if ([string]::IsNullOrWhiteSpace($directory)) {
+        $directory = ${PWD}
+    }
+
+    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 $shell
+}
+
+function Docker-Python {
+    [CmdletBinding()] param (
+        [string] $Script = $null,             # If provided, run this Python script; otherwise open shell
+        [string] $Directory = $null,          # Host directory to mount
+        [string] $Image = "python:3.12-slim", # Python image tag
+        [string] $Shell = "/bin/bash"         # Shell for interactive mode when no script supplied
+    )
+
+    if ([string]::IsNullOrWhiteSpace($Directory)) {
+        $Directory = $PWD
+    }
+
+    if (!(Test-Path -LiteralPath $Directory)) {
+        throw "Directory '$Directory' not found"
+    }
+
+    $runScript = -not [string]::IsNullOrWhiteSpace($Script)
+    if ($runScript) {
+        $scriptPath = Join-Path $Directory $Script
+        if (!(Test-Path -LiteralPath $scriptPath)) {
+            throw "Script '$Script' not found in '$Directory'"
+        }
+    }
+
+    Write-Host "Using image: $Image" -ForegroundColor Cyan
+    Write-Host "Mounting host directory: $Directory" -ForegroundColor Cyan
+
+    $volume = "${Directory}:/work"
+    $commonArgs = @("run", "--rm", "-v", $volume, "-w", "/work")
+
+    if ($runScript) {
+        Write-Host "Executing Python script '$Script' in container..." -ForegroundColor Green
+        & docker @commonArgs $Image python "$Script"
+    }
+    else {
+        Write-Host "Starting interactive Python container (no script provided)..." -ForegroundColor Green
+        & docker @commonArgs -it $Image $Shell
+    }
+}
+
 Export-ModuleMember -Function Docker-Uninstall
 Export-ModuleMember -Function Docker-Start
 Export-ModuleMember -Function Docker-Stop
 Export-ModuleMember -Function Docker-Restart
 Export-ModuleMember -Function MitmProxy
 Export-ModuleMember -Function Docker-DotNet8
+Export-ModuleMember -Function Docker-Python
 
 
 
