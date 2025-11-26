@@ -10,10 +10,25 @@ if (-not (Get-Module -Name Console)) {
     Import-Module $PSScriptRoot\Console.psm1 -DisableNameChecking -Force
 }
 
-$Versions = @{}
-$Versions.Add("17", "2022")
-$Versions.Add("16", "2019")
-$Versions.Add("15", "2017")
+class VsVersion {
+    [string]$Version
+    [string]$Year
+    [string]$PathPart
+
+    VsVersion([string]$version, [string]$year, [string]$pathPart) {
+        $this.Version = $version
+        $this.Year = $year
+        $this.PathPart = $pathPart
+    }
+}
+
+$Versions = @(
+    [VsVersion]::new("18", "2026", "18"),
+    [VsVersion]::new("17", "2022", "2022"),
+    [VsVersion]::new("16", "2019", "2019"),
+    [VsVersion]::new("15", "2017", "2017")
+)
+
 
 function Main
 {
@@ -21,17 +36,22 @@ function Main
     Write-Host "    Solution Path: " -ForegroundColor DarkGray -NoNewLine
     Write-Host "$($solutionPath)"
 
-    [string] $solutionVersion = GetVersionFromSolution $solutionPath
+    [VsVersion] $solutionVersion = GetVersionFromSolution $solutionPath
     Write-Host " Solution Version: " -ForegroundColor DarkGray -NoNewLine
     Write-Host "$($solutionVersion)"
 
+    [VsVersion] $requestedMatch = $null
     if ([string]::IsNullOrWhiteSpace($requestedVersion) -eq $false)
     {
+        $requestedMatch = $Versions |
+            Where-Object { $_.Version -eq $requestedVersion -or $_.Year -eq $requestedVersion } |
+            Select-Object -First 1
+
         Write-Host "Requested Version: " -ForegroundColor DarkGray -NoNewline
         Write-Host "$($requestedVersion)"
     }
 
-    $devEnvPath = FindMatchingDevEnvPath  $solutionPath $requestedVersion $solutionVersion
+    $devEnvPath = FindMatchingDevEnvPath $requestedMatch $solutionVersion
     
     LaunchVisualStudioCode $solutionPath
     LaunchVisualStudio $devEnvPath $solutionPath
@@ -75,7 +95,10 @@ function GetSolutionPath
     {
         if ([System.IO.Directory]::Exists($searchPath))
         {
-            [string[]] $files = [System.IO.Directory]::GetFiles($searchPath, "*.sln", [System.IO.SearchOption]::TopDirectoryOnly)
+            [string[]] $slnFiles = [System.IO.Directory]::GetFiles($searchPath, "*.sln", [System.IO.SearchOption]::TopDirectoryOnly)
+            [string[]] $slnxFiles = [System.IO.Directory]::GetFiles($searchPath, "*.slnx", [System.IO.SearchOption]::TopDirectoryOnly)
+            [string[]] $files = $slnFiles + $slnxFiles
+
             if ($files.Length -eq 1)
             {
                 [string] $file = [System.Linq.Enumerable]::Single($files)
@@ -97,12 +120,17 @@ function GetSolutionPath
 
 
 
-function GetVersionFromSolution
-{
+function GetVersionFromSolution{
     param ( [string] $solutionPath )
 
     try
     {
+        if ([System.IO.Path]::GetExtension($solutionPath) -ieq ".slnx")
+        {
+            $first = $Versions | Select-Object -First 1
+            return $first
+        }
+
         [string] $VisualStudioLine = "# Visual Studio ";
 
         [string] $version = [System.IO.File]::ReadAllLines($solutionPath) `
@@ -110,7 +138,7 @@ function GetVersionFromSolution
             | Linq-Select {$_.Substring($_.LastIndexOf(' ')).Trim()} `
             | Linq-Single
 		
-        $year = $Versions[$version]
+        $year = $Versions | Where-Object { $_.Version -eq $version } | Select-Object -First 1
 
         return $year
     }
@@ -121,23 +149,24 @@ function GetVersionFromSolution
 }
 
 function FindMatchingDevEnvPath {
-    param ([string] $solutionPath, [string] $requestedVersion, [string] $solutionVersion)
+    param ([VsVersion] $requestedVersion, [VsVersion] $solutionVersion)
 
-    [string[]] $years = (
+    [VsVersion[]] $allVersions = @(
         $requestedVersion,
         $solutionVersion
-    ) + $Versions.Values | Sort -Descending
+    ) + $Versions
 
-    $devEnvPath = GetDevEnvPath $years
+    $allVersions = $allVersions | Where-Object { $_ -ne $null }
+
+    $devEnvPath = GetDevEnvPath $allVersions
     Write-Host "   VS DevEnv Path: " -ForegroundColor DarkGray -NoNewline
     Write-Host "$($devEnvPath)"
 
     return $devEnvPath
 }
 
-function GetDevEnvPath
-{
-    param ( [string[]] $years )
+function GetDevEnvPath {
+    param ( [VsVersion[]] $allVersions )
 
     [string[]] $programFiles = (    
         [Environment]::GetFolderPath([Environment+SpecialFolder]::ProgramFilesX86),
@@ -150,9 +179,9 @@ function GetDevEnvPath
         "Community"
     )
     
-    foreach ($year in $years)
+    foreach ($item in $allVersions)
     {
-        if ([string]::IsNullOrWhiteSpace($year))
+        if ([string]::IsNullOrWhiteSpace($item.PathPart))
         {
             continue
         }
@@ -164,7 +193,7 @@ function GetDevEnvPath
                 [string] $searchPath = [string]::Format(
                     "{0}\Microsoft Visual Studio\{1}\{2}\Common7\IDE\devenv.exe",
                     $programFile,
-                    $year,
+                    $item.PathPart,
                     $edition)
 
                 [bool] $exists = [System.IO.File]::Exists($searchPath)
