@@ -28,7 +28,7 @@ gitseg='`__git_ps1 " (%s) "`'
 # Final PS1 (clean layout)
 PS1="${mag} [\A] \
 ${grn} \u \
-${grn}@\h \
+${grn}@ \h \
 ${ylw} \w \
 ${cyn}${gitseg}${rst}
 $ "
