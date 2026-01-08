@@ -90,14 +90,19 @@ function Docker-DotNet8 {
 function Docker-DotNet8 {
     param (
         [string] $shell = "/bin/bash",
-        [string] $directory = $null
+        [string] $directory = $null,
+        [string] $image = $null
     )
 
     if ([string]::IsNullOrWhiteSpace($directory)) {
         $directory = ${PWD}
     }
 
-    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 $shell
+    if ([string]::IsNullOrWhiteSpace($image)) {
+        $image = "mcr.microsoft.com/dotnet/sdk:8.0"
+    }
+    
+    & docker run --rm -v "${directory}:/source" -w /source -it $image $shell
 }
 
 function Docker-Python {

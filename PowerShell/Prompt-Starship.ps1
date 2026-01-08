@@ -5,7 +5,7 @@ function Starship-Use-Preset {
         [string] $Preset = $null
     )
 
-    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, 'starship-presets', 'toml')
+    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, '..', 'starship-presets', 'toml')
 
     if ([string]::IsNullOrWhiteSpace($Preset)) {
         $presets = [System.IO.Directory]::GetFiles($presetFolder, "*.toml")
