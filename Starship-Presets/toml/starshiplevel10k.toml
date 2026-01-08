@@ -1,5 +1,5 @@
 format = """
-[  ](bg:#303030 fg:#c7c7c7)\
+[  ](bg:#303030 fg:#c7c7c7)\
 [](bg:#303030 fg:#707070)\
 $directory\
 $git_branch\

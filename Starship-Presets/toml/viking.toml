@@ -1,7 +1,7 @@
 format = """
 [ ](#FFFFFF)\
 [ ](bg:#00797d)\
-[ ](bg:#00797d fg:#FFFFFF)\
+[ ](bg:#00797d fg:#FFFFFF)\
 $username\
 [](bg:#008c9a fg:#00797d)\
 [ ](bg:#008c9a fg:#FFFFFF)\

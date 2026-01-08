@@ -1,6 +1,6 @@
 format = """
 [](#ffff00)\
-[ ](bg:#ffff00 fg:#ff0080)\
+[ ](bg:#ffff00 fg:#ff0080)\
 [ ](bg:#f5b041 fg:#ffff00)\
 $username\
 [](bg:#ff8700 fg:#f5b041)\
