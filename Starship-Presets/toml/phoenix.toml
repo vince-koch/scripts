@@ -22,7 +22,8 @@ $cmd_duration\
 $hostname\
 [ ](#FFFFFF)\
 $time\
-$character"""
+$character
+"""
 
 # Disable the blank line at the start of the prompt
 add_newline = false

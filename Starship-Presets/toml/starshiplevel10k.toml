@@ -14,7 +14,8 @@ $username\
 $hostname\
 [ ](bg:#303030 fg:#909090)\
 $time\
-[ ](bg:#303030 fg:#567676)"""
+[ ](bg:#303030 fg:#567676)
+"""
 
 # Disable the blank line at the start of the prompt
 add_newline = false
