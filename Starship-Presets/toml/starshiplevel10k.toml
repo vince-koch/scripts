@@ -31,8 +31,8 @@ disabled = false
 
 [status]
 style = 'bg:#303030'
-symbol = '[✘ ](fg:red bg:#303030)'
-success_symbol = '[✔ ](fg:green bg:#303030)'
+symbol = '[✘  ](fg:red bg:#303030)'
+success_symbol = '[✔  ](fg:green bg:#303030)'
 format = '[[$signal_name ](fg:red bg:#303030)$symbol]($style)'
 map_symbol = false
 disabled = false
