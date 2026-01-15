@@ -74,35 +74,26 @@ function MitmProxy {
     }
 }
 
-function Docker-DotNet8 {
+function Docker-DotNet {
     param (
-        [string] $shell = "/bin/bash",
-        [string] $directory = $null
-    )
-
-    if ([string]::IsNullOrWhiteSpace($directory)) {
-        $directory = ${PWD}
-    }
-
-    & docker run --rm -v "${directory}:/source" -w /source -it mcr.microsoft.com/dotnet/sdk:8.0 $shell
-}
-
-function Docker-DotNet8 {
-    param (
-        [string] $shell = "/bin/bash",
         [string] $directory = $null,
-        [string] $image = $null
+        [string] $image = "mcr.microsoft.com/dotnet/sdk",
+        [string] $tag = "8.0",
+        [string] $shell = "/bin/bash"
     )
 
     if ([string]::IsNullOrWhiteSpace($directory)) {
         $directory = ${PWD}
     }
 
-    if ([string]::IsNullOrWhiteSpace($image)) {
-        $image = "mcr.microsoft.com/dotnet/sdk:8.0"
+    switch ($tag) {
+        "8" { $tag = "8.0" }
+        "9" { $tag = "9.0" }
+        "10" { $tag = "10.0" }
+        default { }
     }
-    
-    & docker run --rm -v "${directory}:/source" -w /source -it $image $shell
+
+    & docker run --rm -v "${directory}:/source" -w /source -it "${image}:${tag}" $shell
 }
 
 function Docker-Python {
@@ -150,7 +141,7 @@ Export-ModuleMember -Function Docker-Start
 Export-ModuleMember -Function Docker-Stop
 Export-ModuleMember -Function Docker-Restart
 Export-ModuleMember -Function MitmProxy
-Export-ModuleMember -Function Docker-DotNet8
+Export-ModuleMember -Function Docker-DotNet
 Export-ModuleMember -Function Docker-Python
 
 
