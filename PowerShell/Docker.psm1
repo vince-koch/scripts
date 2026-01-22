@@ -392,7 +392,10 @@ function Start-DockerInteractive {
             '5' { Edit-Ports }
             '6' { Edit-EnvVars }
             '7' { Edit-Volumes }
-            'R' { $wasRunRequested = $true }
+            'R' {
+                Write-Host ""
+                $wasRunRequested = $true
+            }
             'Q' { 
                 Write-Host "`nCancelled." -ForegroundColor Yellow
                 return 
@@ -427,7 +430,6 @@ function Start-DockerInteractive {
     
     $cmd += " $fullImage"
     
-    Clear-Host
     Write-Host "=== Generated Docker Command ===" -ForegroundColor Cyan
     Write-Host $cmd -ForegroundColor Yellow
     Write-Host ""
@@ -441,196 +443,6 @@ function Start-DockerInteractive {
         Write-Host "`nCommand not executed." -ForegroundColor Yellow
     }
 }
-
-<#
-function Start-DockerInteractive {
-    # .SYNOPSIS
-    #     Interactively prompts user to configure and start a Docker container
-    # .PARAMETER ImageName
-    #     Docker image name
-    # .PARAMETER DefaultTag
-    #     Default image tag
-    # .PARAMETER DefaultName
-    #     Default container name
-    # .PARAMETER DefaultPorts
-    #     Array of default port mappings
-    # .PARAMETER DefaultEnvVars
-    #     Array of default environment variables
-    # .PARAMETER DefaultVolumePath
-    #     Suggested container volume path
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$ImageName,
-        [string]$DefaultTag = "latest",
-        [string]$DefaultName = "",
-        [string[]]$DefaultPorts = @(),
-        [string[]]$DefaultEnvVars = @(),
-        [string]$DefaultVolumePath = ""
-    )
-    
-    Write-Host "`n=== Starting $ImageName Container ===" -ForegroundColor Cyan
-    
-    # Image tag
-    $tag = Read-Host "`nImage tag (default: $DefaultTag)"
-    if ([string]::IsNullOrWhiteSpace($tag)) { $tag = $DefaultTag }
-    $fullImage = "${ImageName}:${tag}"
-    
-    # Container name
-    $namePrompt = if ($DefaultName) { "Container name (default: $DefaultName)" } else { "Container name (optional)" }
-    $containerName = Read-Host $namePrompt
-    if ([string]::IsNullOrWhiteSpace($containerName) -and $DefaultName) { 
-        $containerName = $DefaultName 
-    }
-    
-    # Detached mode
-    $detached = Read-Host "`nRun in detached mode? (y/n, default: y)"
-    $detached = if ([string]::IsNullOrWhiteSpace($detached) -or $detached -eq 'y') { $true } else { $false }
-    
-    # Interactive mode (if not detached)
-    $interactive = $false
-    if (-not $detached) {
-        $interactive = Read-Host "Run in interactive mode with TTY? (y/n)"
-        $interactive = $interactive -eq 'y'
-    }
-    
-    # Port mappings
-    Write-Host "`n--- Port Configuration ---" -ForegroundColor Cyan
-    $ports = @()
-    
-    if ($DefaultPorts.Count -gt 0) {
-        Write-Host "Suggested ports:" -ForegroundColor Yellow
-        foreach ($port in $DefaultPorts) {
-            Write-Host "  $port" -ForegroundColor Gray
-        }
-        $useDefaults = Read-Host "Use these ports? (y/n, default: y)"
-        if ([string]::IsNullOrWhiteSpace($useDefaults) -or $useDefaults -eq 'y') {
-            $ports = $DefaultPorts
-        }
-    }
-    
-    $addPort = Read-Host "Add/modify port mappings? (y/n)"
-    while ($addPort -eq 'y') {
-        $hostPort = Read-Host "  Host port"
-        $containerPort = Read-Host "  Container port"
-        if ($hostPort -and $containerPort) {
-            $ports += "${hostPort}:${containerPort}"
-        }
-        $addPort = Read-Host "Add another port? (y/n)"
-    }
-    
-    # Environment variables
-    Write-Host "`n--- Environment Variables ---" -ForegroundColor Cyan
-    $envVars = @()
-    
-    if ($DefaultEnvVars.Count -gt 0) {
-        Write-Host "Suggested environment variables:" -ForegroundColor Yellow
-        foreach ($env in $DefaultEnvVars) {
-            $parts = $env -split '=', 2
-            Write-Host "  $($parts[0]) = $($parts[1])" -ForegroundColor Gray
-        }
-        
-        $customize = Read-Host "Customize these values? (y/n, default: n)"
-        if ($customize -eq 'y') {
-            foreach ($env in $DefaultEnvVars) {
-                $parts = $env -split '=', 2
-                $newValue = Read-Host "  $($parts[0]) (press Enter for: $($parts[1]))"
-                if ([string]::IsNullOrWhiteSpace($newValue)) {
-                    $envVars += $env
-                } else {
-                    $envVars += "$($parts[0])=$newValue"
-                }
-            }
-        } else {
-            $envVars = $DefaultEnvVars
-        }
-    }
-    
-    $addEnv = Read-Host "Add additional environment variables? (y/n)"
-    while ($addEnv -eq 'y') {
-        $envName = Read-Host "  Variable name"
-        $envValue = Read-Host "  Variable value"
-        if ($envName) {
-            $envVars += "${envName}=${envValue}"
-        }
-        $addEnv = Read-Host "Add another? (y/n)"
-    }
-    
-    # Volume mapping
-    Write-Host "`n--- Volume Configuration ---" -ForegroundColor Cyan
-    $volumes = @()
-    
-    if ($DefaultVolumePath) {
-        Write-Host "Suggested container path: $DefaultVolumePath" -ForegroundColor Yellow
-        $addVolume = Read-Host "Mount a volume for data persistence? (y/n)"
-        if ($addVolume -eq 'y') {
-            $hostPath = Read-Host "  Host path (where to store data)"
-            if ($hostPath) {
-                $volumes += "${hostPath}:${DefaultVolumePath}"
-            }
-        }
-    }
-    
-    $addMore = Read-Host "Add additional volume mounts? (y/n)"
-    while ($addMore -eq 'y') {
-        $hostPath = Read-Host "  Host path"
-        $containerPath = Read-Host "  Container path"
-        if ($hostPath -and $containerPath) {
-            $volumes += "${hostPath}:${containerPath}"
-        }
-        $addMore = Read-Host "Add another? (y/n)"
-    }
-    
-    # Restart policy
-    Write-Host "`n--- Restart Policy ---" -ForegroundColor Cyan
-    Write-Host "  1. no"
-    Write-Host "  2. always"
-    Write-Host "  3. unless-stopped"
-    Write-Host "  4. on-failure"
-    $restartChoice = Read-Host "Select (1-4, default: 3)"
-    $restartPolicy = switch ($restartChoice) {
-        '1' { 'no' }
-        '2' { 'always' }
-        '4' { 'on-failure' }
-        default { 'unless-stopped' }
-    }
-    
-    # Build the docker run command
-    $cmd = "docker run"
-    
-    if ($detached) { $cmd += " -d" }
-    if ($interactive) { $cmd += " -it" }
-    if ($containerName) { $cmd += " --name $containerName" }
-    if ($restartPolicy -ne 'no') { $cmd += " --restart $restartPolicy" }
-    
-    foreach ($port in $ports) {
-        $cmd += " -p $port"
-    }
-    
-    foreach ($volume in $volumes) {
-        $cmd += " -v `"$volume`""
-    }
-    
-    foreach ($env in $envVars) {
-        $cmd += " -e `"$env`""
-    }
-    
-    $cmd += " $fullImage"
-    
-    # Display and confirm
-    Write-Host "`n=== Generated Docker Command ===" -ForegroundColor Cyan
-    Write-Host $cmd -ForegroundColor Yellow
-    
-    $execute = Read-Host "`nExecute this command? (y/n, default: y)"
-    if ([string]::IsNullOrWhiteSpace($execute) -or $execute -eq 'y') {
-        Write-Host "`nExecuting..." -ForegroundColor Green
-        Invoke-Expression $cmd
-        Write-Host "`n✓ Container started!" -ForegroundColor Green
-    } else {
-        Write-Host "`nCommand not executed." -ForegroundColor Yellow
-    }
-}
-#>
-
 
 # Container-specific functions that call Start-DockerInteractive with defaults
 
