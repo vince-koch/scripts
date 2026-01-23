@@ -128,16 +128,13 @@ Try-Import-Module $PSScriptRoot\Ps.psm1
 Try-Import-Module $PSScriptRoot\Shebang.psm1
 Try-Import-Module $PSScriptRoot\Studio3T.psm1
 Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
-Try-Import-Module $PSScriptRoot\UpdateCheck.psm1
+Try-Import-Module $PSScriptRoot\Update.psm1
 Try-Import-Module $PSScriptRoot\VisualStudio.psm1
 Try-Import-Module $PSScriptRoot\Windows.psm1
 
 Start-Profile-Timer -Name "TerminalIcons"
 . $PSScriptRoot\Profile-TerminalIcons.ps1
 Stop-Profile-Timer -Name "TerminalIcons"
-
-# AutoUpdate
-Update-LastChecked
 
 # add $PSScriptRoot to the path
 $env:Path += ";$PSScriptRoot"
