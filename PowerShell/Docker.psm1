@@ -1,79 +1,6 @@
 # USAGE
 # Import-Module $PSScriptRoot\Docker.psm1 -DisableNameChecking -Force
 
-Try-Import-Module $PSScriptRoot\Console.psm1
-
-function Docker-Uninstall {
-    param (
-        [string] $name
-    )
-
-    $ docker rm $name | Out-Host
-}
-
-function Docker-Start {
-    param (
-        [string] $name
-    )
-
-    $ docker start $name | Out-Host
-}
-
-function Docker-Stop {
-    param (
-        [string] $name
-    )
-
-    $ docker stop $name | Out-Host
-}
-
-function Docker-Restart {
-    param (
-        [string] $name
-    )
-
-    $ docker restart $name | Out-Host
-}
-
-function MitmProxy-Install {
-    Write-Host "1. Install mitmproxy"
-    Write-Host "2. Please update your proxy settings"
-    Write-Host "3. Point browser at http://mitm.it to install certificate"
-
-    $result = Console-Confirm -Prompt "Would you like to continue with the installation? [y/N]" -Default $false
-    if ($result -eq $false) {
-        return
-    }
-
-    & docker run --name mitmproxy -p 8080:8080 -p 127.0.0.1:8081:8081 mitmproxy/mitmproxy mitmweb --web-host 0.0.0.0 | Out-Host
-}
-
-function MitmProxy {
-    param (
-        [string] $command
-    )
-
-    $containerName = "mitmproxy"
-
-    switch ($command) {
-        "install" { MitmProxy-Install }
-        "start" { Docker-Start -Name $containerName }
-        "restart" { Docker-Stop -Name $containerName }
-        "stop" { Docker-Stop -Name $containerName }
-        "uninstall" { Docker-Uninstall -Name $containerName }
-        default {
-            Write-Host "MitmProxy [command]"
-            Write-Host ""
-            Write-Host "    command"
-            Write-Host "        install"
-            Write-Host "        start"
-            Write-Host "        restart"
-            Write-Host "        stop"
-            Write-Host "        uninstall"
-        }
-    }
-}
-
 function Docker-DotNet {
     param (
         [string] $directory = $null,
@@ -136,9 +63,7 @@ function Docker-Python {
     }
 }
 
-
-
-function Start-DockerInteractive {
+function Docker-StartInteractive {
     # .SYNOPSIS
     # Interactively prompts user to configure and start a Docker container
     # .PARAMETER ImageName
@@ -147,6 +72,8 @@ function Start-DockerInteractive {
     # Default image tag
     # .PARAMETER DefaultName
     # Default container name
+    # .PARAMETER DefaultCommand
+    # Command to run in the container
     # .PARAMETER DefaultPorts
     # Array of default port mappings
     # .PARAMETER DefaultEnvVars
@@ -158,6 +85,7 @@ function Start-DockerInteractive {
         [string]$ImageName,
         [string]$DefaultTag = "latest",
         [string]$DefaultName = "",
+        [string]$DefaultCommand = "",
         [string[]]$DefaultPorts = @(),
         [string[]]$DefaultEnvVars = @(),
         [string]$DefaultVolumePath = ""
@@ -173,49 +101,8 @@ function Start-DockerInteractive {
         EnvVars = [System.Collections.ArrayList]@($DefaultEnvVars)
         Volumes = [System.Collections.ArrayList]@()
         RestartPolicy = "unless-stopped"
-    }
-    
-    function Show-Configuration {
-        Clear-Host
-        Write-Host "=== Docker Container Configuration: $ImageName ===" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host " 1. Image Tag:        " -NoNewline; Write-Host $config.Tag -ForegroundColor Yellow
-        Write-Host " 2. Container Name:   " -NoNewline; Write-Host $(if($config.Name){"$($config.Name)"}else{"(none)"}) -ForegroundColor Yellow
-        Write-Host " 3. Mode:             " -NoNewline; Write-Host $(if($config.Detached){"Detached"}else{"Interactive"}) -ForegroundColor Yellow
-        Write-Host " 4. Restart Policy:   " -NoNewline; Write-Host $config.RestartPolicy -ForegroundColor Yellow
-        Write-Host ""
-        Write-Host " 5. Ports:" -ForegroundColor Cyan
-        if ($config.Ports.Count -gt 0) {
-            foreach ($port in $config.Ports) {
-                Write-Host "      $port" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "      (none)" -ForegroundColor Gray
-        }
-        Write-Host ""
-        Write-Host " 6. Environment Variables:" -ForegroundColor Cyan
-        if ($config.EnvVars.Count -gt 0) {
-            foreach ($env in $config.EnvVars) {
-                $parts = $env -split '=', 2
-                Write-Host "      $($parts[0]) = $($parts[1])" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "      (none)" -ForegroundColor Gray
-        }
-        Write-Host ""
-        Write-Host " 7. Volumes:" -ForegroundColor Cyan
-        if ($config.Volumes.Count -gt 0) {
-            foreach ($vol in $config.Volumes) {
-                Write-Host "      $vol" -ForegroundColor Gray
-            }
-        } else {
-            Write-Host "      (none)" -ForegroundColor Gray
-        }
-        Write-Host ""
-        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host " [1-7] Edit setting  |  [R] Run  |  [Q] Quit" -ForegroundColor DarkGray
-        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host ""
+        Command = $DefaultCommand
+        Entrypoint = ""
     }
     
     function Edit-Tag {
@@ -256,6 +143,20 @@ function Start-DockerInteractive {
             '4' { 'on-failure' }
             default { $config.RestartPolicy }
         }
+    }
+    
+    function Edit-Command {
+        Write-Host "Command to run in container (e.g., '/bin/bash', 'npm start')"
+        Write-Host "Leave blank to use container's default command" -ForegroundColor Gray
+        $newCommand = Read-Host "Command (current: $(if($config.Command){$config.Command}else{'default'}))"
+        $config.Command = $newCommand
+    }
+    
+    function Edit-Entrypoint {
+        Write-Host "Override container's entrypoint (advanced)"
+        Write-Host "Leave blank to use container's default entrypoint" -ForegroundColor Gray
+        $newEntrypoint = Read-Host "Entrypoint (current: $(if($config.Entrypoint){$config.Entrypoint}else{'default'}))"
+        $config.Entrypoint = $newEntrypoint
     }
     
     function Edit-Ports {
@@ -377,10 +278,59 @@ function Start-DockerInteractive {
             }
         }
     }
+
+    function Show-Configuration {
+        Clear-Host
+        Write-Host "=== Docker Container Configuration: $ImageName ===" -ForegroundColor Cyan
+        Write-Host ""
+        Write-Host " 1. Image Tag:        " -NoNewline; Write-Host $config.Tag -ForegroundColor Yellow
+        Write-Host " 2. Container Name:   " -NoNewline; Write-Host $(if($config.Name){"$($config.Name)"}else{"(none)"}) -ForegroundColor Yellow
+        Write-Host " 3. Mode:             " -NoNewline; Write-Host $(if($config.Detached){"Detached"}else{"Interactive"}) -ForegroundColor Yellow
+        Write-Host " 4. Restart Policy:   " -NoNewline; Write-Host $config.RestartPolicy -ForegroundColor Yellow
+        Write-Host " 5. Command:          " -NoNewline; Write-Host $(if($config.Command){"$($config.Command)"}else{"(default)"}) -ForegroundColor Yellow
+        Write-Host " 6. Entrypoint:       " -NoNewline; Write-Host $(if($config.Entrypoint){"$($config.Entrypoint)"}else{"(default)"}) -ForegroundColor Yellow
+        
+        Write-Host ""
+        Write-Host " 7. Ports:" -ForegroundColor Cyan
+        if ($config.Ports.Count -gt 0) {
+            foreach ($port in $config.Ports) {
+                Write-Host "      $port" -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "      (none)" -ForegroundColor Gray
+        }
+
+        Write-Host ""
+        Write-Host " 8. Environment Variables:" -ForegroundColor Cyan
+        if ($config.EnvVars.Count -gt 0) {
+            foreach ($env in $config.EnvVars) {
+                $parts = $env -split '=', 2
+                Write-Host "      $($parts[0]) = $($parts[1])" -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "      (none)" -ForegroundColor Gray
+        }
+
+        Write-Host ""
+        Write-Host " 9. Volumes:" -ForegroundColor Cyan
+        if ($config.Volumes.Count -gt 0) {
+            foreach ($vol in $config.Volumes) {
+                Write-Host "      $vol" -ForegroundColor Gray
+            }
+        } else {
+            Write-Host "      (none)" -ForegroundColor Gray
+        }
+
+        Write-Host ""
+        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host " [1-9] Edit setting  |  [R] Run  |  [Q] Quit" -ForegroundColor DarkGray
+        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host ""
+    }
     
     # Main configuration loop
-    $wasRunRequested = $false
-    while (-not $wasRunRequested) {
+    $shouldRun = $false
+    while (-not $shouldRun) {
         Show-Configuration
         $choice = Read-Host "Select option"
         
@@ -389,25 +339,27 @@ function Start-DockerInteractive {
             '2' { Edit-Name }
             '3' { Edit-Mode }
             '4' { Edit-RestartPolicy }
-            '5' { Edit-Ports }
-            '6' { Edit-EnvVars }
-            '7' { Edit-Volumes }
+            '5' { Edit-Command }
+            '6' { Edit-Entrypoint }
+            '7' { Edit-Ports }
+            '8' { Edit-EnvVars }
+            '9' { Edit-Volumes }
             'R' {
                 Write-Host ""
-                $wasRunRequested = $true
+                $shouldRun = $true
             }
             'Q' { 
                 Write-Host "`nCancelled." -ForegroundColor Yellow
                 return 
             }
             default {
-                Write-Host "Invalid option. Please select 1-7, R, or Q" -ForegroundColor Red
+                Write-Host "Invalid option. Please select 1-9, R, or Q" -ForegroundColor Red
                 Start-Sleep -Seconds 1
             }
         }
     }
     
-    # Build and execute the docker run command
+   # Build the docker run command
     $fullImage = "${ImageName}:$($config.Tag)"
     $cmd = "docker run"
     
@@ -428,8 +380,17 @@ function Start-DockerInteractive {
         $cmd += " -e `"$env`""
     }
     
+    if ($config.Entrypoint) {
+        $cmd += " --entrypoint `"$($config.Entrypoint)`""
+    }
+    
     $cmd += " $fullImage"
     
+    if ($config.Command) {
+        $cmd += " $($config.Command)"
+    }
+    
+    # Display docker run command and confirm execution
     Write-Host "=== Generated Docker Command ===" -ForegroundColor Cyan
     Write-Host $cmd -ForegroundColor Yellow
     Write-Host ""
@@ -444,14 +405,14 @@ function Start-DockerInteractive {
     }
 }
 
-# Container-specific functions that call Start-DockerInteractive with defaults
+# Container-specific functions that call Docker-StartInteractive with defaults
 
 function Start-Mongo {
     <#
     .SYNOPSIS
         Interactively start a MongoDB container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "mongo" `
         -DefaultTag "8.2.3" `
         -DefaultName "mongo-8-2-3" `
@@ -468,7 +429,7 @@ function Start-Postgres {
     .SYNOPSIS
         Interactively start a PostgreSQL container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "postgres" `
         -DefaultTag "15" `
         -DefaultName "postgres-dev" `
@@ -485,7 +446,7 @@ function Start-Redis {
     .SYNOPSIS
         Interactively start a Redis container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "redis" `
         -DefaultTag "alpine" `
         -DefaultName "redis-dev" `
@@ -516,7 +477,7 @@ function Start-LocalStack {
         Write-Host "  (Set `$env:LOCALSTACK_AUTH_TOKEN to use Pro features)" -ForegroundColor Gray
     }
     
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName $imageName `
         -DefaultTag "latest" `
         -DefaultName "localstack" `
@@ -530,7 +491,7 @@ function Start-SqlServer {
     .SYNOPSIS
         Interactively start a SQL Server container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "mcr.microsoft.com/mssql/server" `
         -DefaultTag "2022-latest" `
         -DefaultName "sqlserver-dev" `
@@ -547,7 +508,7 @@ function Start-RabbitMQ {
     .SYNOPSIS
         Interactively start a RabbitMQ container with management UI
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "rabbitmq" `
         -DefaultTag "management-alpine" `
         -DefaultName "rabbitmq-dev" `
@@ -563,7 +524,7 @@ function Start-Nginx {
     .SYNOPSIS
         Interactively start an Nginx container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "nginx" `
         -DefaultTag "alpine" `
         -DefaultName "nginx-dev" `
@@ -576,7 +537,7 @@ function Start-MySQL {
     .SYNOPSIS
         Interactively start a MySQL container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "mysql" `
         -DefaultTag "8" `
         -DefaultName "mysql-dev" `
@@ -593,7 +554,7 @@ function Start-Elasticsearch {
     .SYNOPSIS
         Interactively start an Elasticsearch container
     #>
-    Start-DockerInteractive `
+    Docker-StartInteractive `
         -ImageName "docker.elastic.co/elasticsearch/elasticsearch" `
         -DefaultTag "8.11.0" `
         -DefaultName "elasticsearch-dev" `
@@ -606,22 +567,6 @@ function Start-Elasticsearch {
         -DefaultVolumePath "/usr/share/elasticsearch/data"
 }
 
-# Helper to list available functions
-function Get-DockerStartFunctions {
-    Write-Host "`n=== Available Docker Start Functions ===" -ForegroundColor Cyan
-    Write-Host "Start-Mongo          - MongoDB" -ForegroundColor Yellow
-    Write-Host "Start-Postgres       - PostgreSQL" -ForegroundColor Yellow
-    Write-Host "Start-Redis          - Redis" -ForegroundColor Yellow
-    Write-Host "Start-LocalStack     - AWS LocalStack" -ForegroundColor Yellow
-    Write-Host "Start-SqlServer      - SQL Server" -ForegroundColor Yellow
-    Write-Host "Start-RabbitMQ       - RabbitMQ with Management" -ForegroundColor Yellow
-    Write-Host "Start-Nginx          - Nginx" -ForegroundColor Yellow
-    Write-Host "Start-MySQL          - MySQL" -ForegroundColor Yellow
-    Write-Host "Start-Elasticsearch  - Elasticsearch" -ForegroundColor Yellow
-    Write-Host "`nJust run the function (e.g., Start-Mongo) to begin!" -ForegroundColor Gray
-}
-
-
 
 Export-ModuleMember -Function Docker-Uninstall
 Export-ModuleMember -Function Docker-Start
@@ -631,7 +576,7 @@ Export-ModuleMember -Function MitmProxy
 Export-ModuleMember -Function Docker-DotNet
 Export-ModuleMember -Function Docker-Python
 
-Export-ModuleMember -Function Start-DockerInteractive
+Export-ModuleMember -Function Docker-StartInteractive
 Export-ModuleMember -Function Start-Mongo
 Export-ModuleMember -Function Start-Redis
 Export-ModuleMember -Function Start-Postgres
