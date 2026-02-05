@@ -44,15 +44,15 @@ function List-Bookmarks {
     
     $bookmarks = Json-LoadHashtable -Path $bookmarkFile
 
-    $bookmarks.Keys
-        | Sort-Object
-        | ForEach-Object {
+    $bookmarks.Keys |
+        Sort-Object |
+        ForEach-Object {
             [PSCustomObject]@{
                 Name = $_
                 Path = $bookmarks[$_]
             }
-        }
-        | Format-Table -AutoSize
+        } |
+        Format-Table -AutoSize
 }
 
 function Remove-Bookmark {

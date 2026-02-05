@@ -281,14 +281,14 @@ function Docker-StartInteractive {
 
     function Show-Configuration {
         Clear-Host
-        Write-Host "=== Docker Container Configuration: $ImageName ===" -ForegroundColor Cyan
-        Write-Host ""
-        Write-Host " 1. Image Tag:        " -NoNewline; Write-Host $config.Tag -ForegroundColor Yellow
-        Write-Host " 2. Container Name:   " -NoNewline; Write-Host $(if($config.Name){"$($config.Name)"}else{"(none)"}) -ForegroundColor Yellow
-        Write-Host " 3. Mode:             " -NoNewline; Write-Host $(if($config.Detached){"Detached"}else{"Interactive"}) -ForegroundColor Yellow
-        Write-Host " 4. Restart Policy:   " -NoNewline; Write-Host $config.RestartPolicy -ForegroundColor Yellow
-        Write-Host " 5. Command:          " -NoNewline; Write-Host $(if($config.Command){"$($config.Command)"}else{"(default)"}) -ForegroundColor Yellow
-        Write-Host " 6. Entrypoint:       " -NoNewline; Write-Host $(if($config.Entrypoint){"$($config.Entrypoint)"}else{"(default)"}) -ForegroundColor Yellow
+        Write-Host '=== Docker Container Configuration: $ImageName ===' -ForegroundColor Cyan
+        Write-Host ''
+        Write-Host ' 1. Image Tag:        ' -NoNewline; Write-Host $config.Tag -ForegroundColor Yellow
+        Write-Host ' 2. Container Name:   ' -NoNewline; Write-Host $(if($config.Name){"$($config.Name)"}else{"(none)"}) -ForegroundColor Yellow
+        Write-Host ' 3. Mode:             ' -NoNewline; Write-Host $(if($config.Detached){"Detached"}else{"Interactive"}) -ForegroundColor Yellow
+        Write-Host ' 4. Restart Policy:   ' -NoNewline; Write-Host $config.RestartPolicy -ForegroundColor Yellow
+        Write-Host ' 5. Command:          ' -NoNewline; Write-Host $(if($config.Command){"$($config.Command)"}else{"(default)"}) -ForegroundColor Yellow
+        Write-Host ' 6. Entrypoint:       ' -NoNewline; Write-Host $(if($config.Entrypoint){"$($config.Entrypoint)"}else{"(default)"}) -ForegroundColor Yellow
         
         Write-Host ""
         Write-Host " 7. Ports:" -ForegroundColor Cyan
@@ -305,27 +305,27 @@ function Docker-StartInteractive {
         if ($config.EnvVars.Count -gt 0) {
             foreach ($env in $config.EnvVars) {
                 $parts = $env -split '=', 2
-                Write-Host "      $($parts[0]) = $($parts[1])" -ForegroundColor Gray
+                Write-Host '      $($parts[0]) = $($parts[1])' -ForegroundColor Gray
             }
         } else {
-            Write-Host "      (none)" -ForegroundColor Gray
+            Write-Host '      (none)' -ForegroundColor Gray
         }
 
-        Write-Host ""
-        Write-Host " 9. Volumes:" -ForegroundColor Cyan
+        Write-Host ''
+        Write-Host ' 9. Volumes:' -ForegroundColor Cyan
         if ($config.Volumes.Count -gt 0) {
             foreach ($vol in $config.Volumes) {
-                Write-Host "      $vol" -ForegroundColor Gray
+                Write-Host '      $vol' -ForegroundColor Gray
             }
         } else {
-            Write-Host "      (none)" -ForegroundColor Gray
+            Write-Host '      (none)' -ForegroundColor Gray
         }
 
-        Write-Host ""
-        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host " [1-9] Edit setting  |  [R] Run  |  [Q] Quit" -ForegroundColor DarkGray
-        Write-Host "───────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host ""
+        Write-Host ''
+        Write-Host '───────────────────────────────────────────────────' -ForegroundColor DarkGray
+        Write-Host ' [1-9] Edit setting  |  [R] Run  |  [Q] Quit' -ForegroundColor DarkGray
+        Write-Host '───────────────────────────────────────────────────' -ForegroundColor DarkGray
+        Write-Host ''
     }
     
     # Main configuration loop
@@ -473,7 +473,7 @@ function Start-LocalStack {
         $envVars += "LOCALSTACK_AUTH_TOKEN=$authToken"
         Write-Host "`n✓ Found LOCALSTACK_AUTH_TOKEN - using LocalStack Pro" -ForegroundColor Green
     } else {
-        Write-Host "`nℹ No LOCALSTACK_AUTH_TOKEN found - using Community edition" -ForegroundColor Gray
+        Write-Host "`nLOCALSTACK_AUTH_TOKEN not found - using Community edition" -ForegroundColor Gray
         Write-Host "  (Set `$env:LOCALSTACK_AUTH_TOKEN to use Pro features)" -ForegroundColor Gray
     }
     
@@ -559,12 +559,12 @@ function Start-Elasticsearch {
         -DefaultTag "8.11.0" `
         -DefaultName "elasticsearch-dev" `
         -DefaultPorts @("9200:9200") `
+        -DefaultVolumePath "/usr/share/elasticsearch/data" `
         -DefaultEnvVars @(
             "discovery.type=single-node",
             "ELASTIC_PASSWORD=elasticpass",
             "xpack.security.enabled=true"
-        ) `
-        -DefaultVolumePath "/usr/share/elasticsearch/data"
+        )
 }
 
 
