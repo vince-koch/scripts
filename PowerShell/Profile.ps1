@@ -160,6 +160,7 @@ Try-Import-Module $PSScriptRoot\Alias.psm1
 Try-Import-Module $PSScriptRoot\Aws.psm1
 Try-Import-Module $PSScriptRoot\Bookmark.psm1
 Try-Import-Module $PSScriptRoot\Console.psm1
+Try-Import-Module $PSScriptRoot\Config.psm1
 Try-Import-Module $PSScriptRoot\Docker.psm1
 Try-Import-Module $PSScriptRoot\Environment.psm1
 Try-Import-Module $PSScriptRoot\Files.psm1

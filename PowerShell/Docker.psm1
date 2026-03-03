@@ -23,6 +23,21 @@ function Docker-DotNet {
     & docker run --rm -v "${directory}:/source" -w /source -it "${image}:${tag}" $shell
 }
 
+function Docker-Node {
+    param (
+        [string] $directory = $null,
+        [string] $image = "node",
+        [string] $tag = "24",
+        [string] $shell = "/bin/bash"
+    )
+
+    if ([string]::IsNullOrWhiteSpace($directory)) {
+        $directory = ${PWD}
+    }
+
+    & docker run --rm -v "${directory}:/source" -w /source -it "${image}:${tag}" $shell
+}
+
 function Docker-Python {
     [CmdletBinding()] param (
         [string] $Script = $null,             # If provided, run this Python script; otherwise open shell
@@ -574,6 +589,7 @@ Export-ModuleMember -Function Docker-Stop
 Export-ModuleMember -Function Docker-Restart
 Export-ModuleMember -Function MitmProxy
 Export-ModuleMember -Function Docker-DotNet
+Export-ModuleMember -Function Docker-Node
 Export-ModuleMember -Function Docker-Python
 
 Export-ModuleMember -Function Docker-StartInteractive
