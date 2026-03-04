@@ -11,6 +11,10 @@ $configItems = @(
         Path = "%USERPROFILE%\.aws\credentials"
     },
     @{
+        Name = "Claris Mongo Connections"
+        Path = "%USERPROFILE%\.claris\mongo-connections.json"
+    }
+    @{
         Name = "Claude Desktop Config"
         Path = "%APPDATA%\Claude\claude_desktop_config.json"
     },
