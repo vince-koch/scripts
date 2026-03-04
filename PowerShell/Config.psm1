@@ -72,7 +72,7 @@ function Config {
         Write-Host ""
         
         if ($selection['Exists'] -eq $true) {
-            Write-Host "Opening: $($selection['ExpandedPath'])" -ForegroundColor Cyane
+            Write-Host "Opening: $($selection['ExpandedPath'])" -ForegroundColor Cyan
             Invoke-Item $selection['ExpandedPath']
         }
         else {
