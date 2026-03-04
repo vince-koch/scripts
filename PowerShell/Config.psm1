@@ -1,3 +1,4 @@
+Try-Import-Module $PSScriptRoot\Ansi.psm1
 Try-Import-Module $PSScriptRoot\Console.psm1
 
 $configItems = @(
@@ -40,23 +41,38 @@ $configItems = @(
 )
 
 function Config {
-    # Import the Console module
-    Import-Module "$PSScriptRoot\Console.psm1" -DisableNameChecking
-
     # Prepare menu items
-    $menuItems = $configItems | ForEach-Object { $_.Name }
-    $menuItems += "Cancel"
+    $menuItems = $configItems | ForEach-Object {
+        $expanded = [System.Environment]::ExpandEnvironmentVariables($_['Path'])
+        $_ + @{ 
+            ExpandedPath = $expanded
+            Exists = [System.IO.File]::Exists($expanded) 
+        }
+    }
 
     # Display menu
-    $selection = Console-Menu -Title "Select a config file to open" -Items $menuItems
+    $selection = Console-Menu -Title "Select a config file to open or ESC to cancel" `
+        -Items $menuItems `
+        -ItemsProperty { 
+            param($item) 
+            $pathColor = if ($item['Exists']) { $Ansi.Fg.BrightBlack } else { $Ansi.Fg.Red }
+            $path = $item['Path']
+            if ($path.Length -gt 40) {
+                $path = $path.Substring(0, 20) + "…" + $path.Substring($path.Length - 20)
+            }
+            "$($item['Name']) $pathColor $path $($Ansi.Reset)"
+        }
 
-    # Handle selection
-    if ($selection -and $selection -ne "Cancel") {
-        $selectedItem = $configItems | Where-Object { $_.Name -eq $selection }
-        if ($selectedItem) {
-            # Open the file
-            $path = [Environment]::ExpandEnvironmentVariables($selectedItem.Path)
-            Invoke-Item $path
+    # Handle selection (Open the file)
+    if ($selection) {
+        Write-Host ""
+        
+        if ($selection['Exists'] -eq $true) {
+            Write-Host "Opening: $($selection['ExpandedPath'])" -ForegroundColor Cyane
+            Invoke-Item $selection['ExpandedPath']
+        }
+        else {
+            Write-Host "Not Found: $($selection['ExpandedPath'])" -ForegroundColor Red
         }
     }
 }
