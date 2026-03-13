@@ -72,8 +72,11 @@ function Config {
         Write-Host ""
         
         if ($selection['Exists'] -eq $true) {
-            Write-Host "Opening: $($selection['ExpandedPath'])" -ForegroundColor Cyan
-            Start-Process $selection['ExpandedPath']
+            # Write-Host "Opening: $($selection['ExpandedPath'])" -ForegroundColor Cyan
+            # Start-Process $selection['ExpandedPath']
+            Write-Host ""
+            Write-Host "$($selection['ExpandedPath'])" -ForegroundColor Cyan
+            & cat $selection['ExpandedPath']
         }
         else {
             Write-Host "Not Found: $($selection['ExpandedPath'])" -ForegroundColor Red
