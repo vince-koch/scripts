@@ -154,7 +154,6 @@ function Write-Colors {
     }
 }
 
-
 # load modules
 Try-Import-Module $PSScriptRoot\Alias.psm1
 Try-Import-Module $PSScriptRoot\Aws.psm1
@@ -176,9 +175,11 @@ Try-Import-Module $PSScriptRoot\Update.psm1
 Try-Import-Module $PSScriptRoot\VisualStudio.psm1
 Try-Import-Module $PSScriptRoot\Windows.psm1
 
-Start-Profile-Timer -Name "TerminalIcons"
-. $PSScriptRoot\Profile-TerminalIcons.ps1
-Stop-Profile-Timer -Name "TerminalIcons"
+#Start-Profile-Timer -Name "TerminalIcons"
+#. $PSScriptRoot\Profile-TerminalIcons.ps1
+#Stop-Profile-Timer -Name "TerminalIcons"
 
 # add $PSScriptRoot to the path
 $env:Path += ";$PSScriptRoot"
+$env:Path += ";$PSScriptRoot\Scripts"
+$env:PATHEXT += ";.PS1"
