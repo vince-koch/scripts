@@ -64,7 +64,7 @@ function Config {
             if ($path.Length -gt 40) {
                 $path = $path.Substring(0, 20) + "…" + $path.Substring($path.Length - 20)
             }
-            "$($item['Name']) $pathColor $path $($Ansi.Reset)"
+            "$($item['Name'].PadRight(30)) $pathColor $path $($Ansi.Reset)"
         }
 
     # Handle selection (Open the file)
