@@ -112,13 +112,13 @@ function Update-PathForNode($nvmHome, $versionFolder) {
 #  Commands
 # ─────────────────────────────────────────────
 
-function Cmd-Home($args) {
-    if ($args.Count -eq 0) {
+function Cmd-Home($path) {
+    if (-not $path) {
         $h = Get-UserEnv "NVM_HOME"
         if ($h) { Write-Host $h }
         else    { Write-Host "(NVM_HOME is not set)" -ForegroundColor Yellow }
     } else {
-        $path = $args[0].Trim().TrimEnd('\')
+        $path = $path.Trim().TrimEnd('\')
         if (-not (Test-Path $path)) {
             $create = Read-Host "Directory '$path' does not exist. Create it? [Y/n]"
             if ($create -eq '' -or $create -match '^[Yy]') {
@@ -353,7 +353,7 @@ $cmd     = if ($args.Count -gt 0) { $args[0].ToLower() } else { "" }
 $cmdArgs = if ($args.Count -gt 1) { $args[1..($args.Count-1)] } else { @() }
 
 switch ($cmd) {
-    "home"      { Cmd-Home      $cmdArgs }
+    "home"      { Cmd-Home      ($cmdArgs | Select-Object -First 1) }
     "install"   { Cmd-Install   ($cmdArgs | Select-Object -First 1) }
     "uninstall" { Cmd-Uninstall ($cmdArgs | Select-Object -First 1) }
     "use"       { Cmd-Use       ($cmdArgs | Select-Object -First 1) }
