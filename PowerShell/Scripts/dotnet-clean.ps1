@@ -76,7 +76,8 @@ Write-Host "Searching for .NET artifacts under: $Path" -ForegroundColor White
 
 $solutionFolders = @('.vs', '.vscode', 'build')
 
-$solutionFiles = Get-ChildItem -Path $Path -Recurse -Include '*.sln', '*.slnx' -File -ErrorAction SilentlyContinue
+$allFiles = @(Get-ChildItem -Path $Path -Recurse -Include '*.sln', '*.slnx', '*.csproj' -File -ErrorAction SilentlyContinue)
+$solutionFiles = @($allFiles | Where-Object { $_.Extension -in '.sln', '.slnx' })
 
 if ($solutionFiles.Count -gt 0) {
     Write-Header "Solution files found: $($solutionFiles.Count)"
@@ -94,7 +95,7 @@ if ($solutionFiles.Count -gt 0) {
 
 $projectFolders = @('bin', 'obj')
 
-$projectFiles = Get-ChildItem -Path $Path -Recurse -Include '*.csproj' -File -ErrorAction SilentlyContinue
+$projectFiles = @($allFiles | Where-Object { $_.Extension -eq '.csproj' })
 
 if ($projectFiles.Count -gt 0) {
     Write-Header "Project files found: $($projectFiles.Count)"

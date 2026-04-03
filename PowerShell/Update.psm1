@@ -11,6 +11,6 @@ function Update {
 
 Export-ModuleMember -Function Update
 
-Write-Host "(Enter " -ForegroundColor DarkGray -NoNewLine
-Write-Host "Update" -ForegroundColor Gray -NoNewLine
-Write-Host " to update profile scripts)" -ForegroundColor DarkGray
+# Write-Host "(Enter " -ForegroundColor DarkGray -NoNewLine
+# Write-Host "Update" -ForegroundColor Gray -NoNewLine
+# Write-Host " to update profile scripts)" -ForegroundColor DarkGray
