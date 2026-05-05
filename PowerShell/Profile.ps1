@@ -183,3 +183,5 @@ Try-Import-Module $PSScriptRoot\Windows.psm1
 $env:Path += ";$PSScriptRoot"
 $env:Path += ";$PSScriptRoot\Scripts"
 $env:PATHEXT += ";.PS1"
+
+Write-Host "Profile loaded..." -ForegroundColor Green
