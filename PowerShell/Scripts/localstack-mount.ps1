@@ -90,7 +90,7 @@ function Ensure-Rclone {
     if (Get-Command rclone -ErrorAction SilentlyContinue) { return }
 
     # rclone is required for mounting the S3 bucket. It depends on WinFsp for filesystem support, so we ensure that first.
-    Ensure-WinFsp
+    #Ensure-WinFsp
 
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         Write-Host 'rclone not found. Installing via winget...'

@@ -59,7 +59,7 @@ function Remove-ArtifactFolder {
     } else {
         try {
             Remove-Item -Recurse -Force -Path $target
-            Write-Host "  Removed: $target" -ForegroundColor Green
+            Write-Host "    Removed: $target" -ForegroundColor Green
         } catch {
             Write-Warning "  Failed to remove '$target': $_"
         }
@@ -196,7 +196,7 @@ if ($projectFiles.Count -gt 0) {
     Write-Host "Project files found: $($projectFiles.Count)" -ForegroundColor White
 
     foreach ($file in $projectFiles) {
-        Write-Host "  $($file.FullName)" -ForegroundColor White
+        Write-Host "  $($file.FullName)" -ForegroundColor White 
         foreach ($folder in $projectFolders) {
             Remove-ArtifactFolder -ParentDir $file.DirectoryName -FolderName $folder
         }
@@ -222,9 +222,10 @@ if ($orphanedFolders.Count -gt 0) {
             Write-Host "  [DRY RUN] Would remove entire folder" -ForegroundColor Yellow
         } else {
             try {
-                Remove-Item -Recurse -Force -Path $folder.FullName
-                Write-Host "  Removed entire folder" -ForegroundColor Green
+                Remove-Item -Recurse -Force -Path $folder.FullName | Out-Null
+                Write-Host "    Removed: $($folder.FullName)" -ForegroundColor Green
             } catch {
+                Write-Host ""  # Force newline before error
                 Write-Warning "  Failed to remove '$($folder.FullName)': $_"
             }
         }
