@@ -108,10 +108,20 @@ function Assert-Success
         [bool]$Fatal = $true
     )
     
-    if ($LASTEXITCODE -ne 0)
+    if ($LASTEXITCODE -eq 0)
     {
-        Write-Host $ErrorMessage -ForegroundColor $(if ($Fatal) { "Red" } else { "Yellow" })
-        if ($Fatal) { exit 1 }
+        Write-Host "✔  $ErrorMessage" -ForegroundColor "Green"
+    }    
+    else
+    {
+        if ($Fatal)
+        {
+            Write-Host "✖  $ErrorMessage" -ForegroundColor "Red"
+            exit 1
+        }
+        else {
+            Write-Host "⚠  $ErrorMessage" -ForegroundColor "Yellow"
+        }
     }
 }
 
@@ -134,31 +144,65 @@ function Invoke-AwsLogin
     Write-Host "Logging into profile '$Profile'..." -ForegroundColor Cyan
     Write-Host ""
 
-    aws sso login --profile $Profile
-    Assert-Success "Login failed."
-    Write-Host "Login successful." -ForegroundColor Green
+    # aws sso login --profile $Profile
+    # Assert-Success "AWS SSO Login"
+    try
+    {
+        aws sts get-caller-identity `
+            --profile $Profile `
+            --output none 2>$null
+        
+        Write-Host "✔  AWS SSO session already valid." -ForegroundColor Green
+    }
+    catch
+    {
+        Write-Host "⚠  AWS SSO session expired. Logging in..." -ForegroundColor Yellow
+
+        aws sso login --profile $Profile
+
+        Assert-Success "AWS SSO Login"
+    }
 
     $env:AWS_PROFILE = $Profile
-    Write-Host "AWS_PROFILE set to '$Profile' for this session."
+    #Write-Host "AWS_PROFILE set to '$Profile' for this session."
 
     # If ClarisHealth profile
     if ($Profile -like "*735155089756*" -or $Profile -like "*Claris*")
     {
         # Login to CodeArtifact
-        Write-Host ""
-        Write-Host "Logging into CodeArtifact..." -ForegroundColor Cyan
-        aws codeartifact login --tool dotnet --domain etl-shared-nuget --domain-owner 735155089756 --repository clh-etl-nugets --profile $Profile
-        Assert-Success "CodeArtifact login failed."    
-        Write-Host "CodeArtifact login successful." -ForegroundColor Green
+        $token = aws codeartifact get-authorization-token `
+            --domain etl-shared-nuget `
+            --domain-owner 735155089756 `
+            --profile $Profile `
+            --output text `
+            --query authorizationToken
+
+        Assert-Success "Obtain CodeArtifact login token."
         
-        # Add CodeArtifact source for dotnet tools
-        Write-Host ""
-        Write-Host "Configuring CodeArtifact for dotnet tools..." -ForegroundColor Cyan
-        $token = aws codeartifact get-authorization-token --domain etl-shared-nuget --domain-owner 735155089756 --query authorizationToken --output text --profile $Profile
-        Assert-Success "Failed to get authorization token."
-        dotnet nuget add source https://etl-shared-nuget-735155089756.d.codeartifact.us-east-1.amazonaws.com/nuget/clh-etl-nugets/v3/index.json --name CodeArtifact --username aws --password $token --store-password-in-clear-text
-        Assert-Success "Failed to add dotnet tools source."
-        Write-Host "Dotnet tools source configured successfully." -ForegroundColor Green
+        $endpoint = aws codeartifact get-repository-endpoint `
+            --domain etl-shared-nuget `
+            --domain-owner 735155089756 `
+            --repository clh-etl-nugets `
+            --profile $Profile `
+            --output text `
+            --query repositoryEndpoint `
+            --format nuget
+
+        Assert-Success "Obtain CodeArtifact repository endpoint"
+
+        $sourceName = "CodeArtifact"
+        $sourceUrl = $endpoint.TrimEnd("/") + "/v3/index.json"
+
+        # Update Nuget source with new token (remove old source first to avoid duplicate errors)
+        dotnet nuget remove source $sourceName 2>$null
+
+        dotnet nuget add source $sourceUrl `
+            --name $sourceName `
+            --username aws `
+            --password $token `
+            --store-password-in-clear-text
+
+        Assert-Success "Update nuget token"
     }
 }
 
