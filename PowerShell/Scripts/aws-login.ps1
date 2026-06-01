@@ -126,6 +126,48 @@ function Assert-Success
 }
 
 
+function Invoke-AwsCliWithSsoRetry
+{
+    <#
+    .SYNOPSIS
+    Runs an AWS CLI command and retries once after SSO re-login if it fails.
+    .PARAMETER Profile
+    The AWS profile name.
+    .PARAMETER ActionName
+    Description used for status output.
+    .PARAMETER Command
+    Script block that executes the AWS CLI command.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Profile,
+
+        [Parameter(Mandatory = $true)]
+        [string]$ActionName,
+
+        [Parameter(Mandatory = $true)]
+        [scriptblock]$Command
+    )
+
+    $result = & $Command
+    if ($LASTEXITCODE -eq 0)
+    {
+        Assert-Success $ActionName
+        return $result
+    }
+
+    Write-Host "⚠  $ActionName failed. Refreshing AWS SSO session and retrying..." -ForegroundColor Yellow
+
+    aws sso login --profile $Profile
+    Assert-Success "AWS SSO Login"
+
+    $result = & $Command
+    Assert-Success $ActionName
+
+    return $result
+}
+
+
 function Invoke-AwsLogin
 {
     <#
@@ -146,15 +188,15 @@ function Invoke-AwsLogin
 
     # aws sso login --profile $Profile
     # Assert-Success "AWS SSO Login"
-    try
+    aws sts get-caller-identity `
+        --profile $Profile `
+        --output none 2>$null
+
+    if ($LASTEXITCODE -eq 0)
     {
-        aws sts get-caller-identity `
-            --profile $Profile `
-            --output none 2>$null
-        
         Write-Host "✔  AWS SSO session already valid." -ForegroundColor Green
     }
-    catch
+    else
     {
         Write-Host "⚠  AWS SSO session expired. Logging in..." -ForegroundColor Yellow
 
@@ -170,25 +212,31 @@ function Invoke-AwsLogin
     if ($Profile -like "*735155089756*" -or $Profile -like "*Claris*")
     {
         # Login to CodeArtifact
-        $token = aws codeartifact get-authorization-token `
-            --domain etl-shared-nuget `
-            --domain-owner 735155089756 `
-            --profile $Profile `
-            --output text `
-            --query authorizationToken
+        $token = Invoke-AwsCliWithSsoRetry `
+            -Profile $Profile `
+            -ActionName "Obtain CodeArtifact login token." `
+            -Command {
+                aws codeartifact get-authorization-token `
+                    --domain etl-shared-nuget `
+                    --domain-owner 735155089756 `
+                    --profile $Profile `
+                    --output text `
+                    --query authorizationToken
+            }
 
-        Assert-Success "Obtain CodeArtifact login token."
-        
-        $endpoint = aws codeartifact get-repository-endpoint `
-            --domain etl-shared-nuget `
-            --domain-owner 735155089756 `
-            --repository clh-etl-nugets `
-            --profile $Profile `
-            --output text `
-            --query repositoryEndpoint `
-            --format nuget
-
-        Assert-Success "Obtain CodeArtifact repository endpoint"
+        $endpoint = Invoke-AwsCliWithSsoRetry `
+            -Profile $Profile `
+            -ActionName "Obtain CodeArtifact repository endpoint" `
+            -Command {
+                aws codeartifact get-repository-endpoint `
+                    --domain etl-shared-nuget `
+                    --domain-owner 735155089756 `
+                    --repository clh-etl-nugets `
+                    --profile $Profile `
+                    --output text `
+                    --query repositoryEndpoint `
+                    --format nuget
+            }
 
         $sourceName = "CodeArtifact"
         $sourceUrl = $endpoint.TrimEnd("/") + "/v3/index.json"
