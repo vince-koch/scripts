@@ -47,8 +47,8 @@ function Welcome {
     $edition = if ($PSVersionTable.PSEdition -eq "Desktop") { "Windows PowerShell" } else { "PowerShell Core" }
     Write-Host "$edition " -ForegroundColor Blue -NoNewLine
     Write-Host "$($PSVersionTable.PSVersion)" -ForegroundColor Cyan
-    Write-Host "$($PSScriptRoot)$([System.IO.Path]::DirectorySeparatorChar)" -ForegroundColor Blue -NoNewLine
-    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Cyan
+    Write-Host "$($PSScriptRoot)$([System.IO.Path]::DirectorySeparatorChar)" -ForegroundColor Gray -NoNewLine
+    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Gray
 }
 
 # startup welcome screen
@@ -183,5 +183,3 @@ Try-Import-Module $PSScriptRoot\Windows.psm1
 $env:Path += ";$PSScriptRoot"
 $env:Path += ";$PSScriptRoot\Scripts"
 $env:PATHEXT += ";.PS1"
-
-Write-Host "Profile loaded..." -ForegroundColor Green
