@@ -94,7 +94,7 @@ function Update {
         return
     }
 
-    Update-Fonts
+    #Update-Fonts
     Update-AiInstructions
 }
 
