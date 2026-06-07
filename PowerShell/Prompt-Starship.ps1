@@ -5,7 +5,7 @@ function Starship-Use-Preset {
         [string] $Preset = $null
     )
 
-    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, '..', 'starship-presets', 'toml')
+    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, '..', 'Resources', 'Starship-Presets', 'toml')
 
     if ([string]::IsNullOrWhiteSpace($Preset)) {
         $presets = [System.IO.Directory]::GetFiles($presetFolder, "*.toml")
@@ -34,6 +34,9 @@ function Starship-Use-Preset {
     }
 }
 
+function Use-Starship-Preset {
+    Starship-Use-Preset
+}
 
 # initialize starship
 $env:STARSHIP_CONFIG = [Environment]::GetEnvironmentVariable("STARSHIP_CONFIG", "User")

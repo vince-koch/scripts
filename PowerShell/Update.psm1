@@ -34,68 +34,17 @@ function Update-GitPull {
     }
 }
 
-function Update-AiInstructions {
-    Write-Host "Updating AI instructions..." -ForegroundColor DarkGray
-
-    $source = Join-Path $PSScriptRoot "Home\AI\user.md"
-    $destinations = @(
-        "$HOME\.claude\CLAUDE.md",
-        "$HOME\.copilot\copilot-instructions.md"
-    )
-
-    foreach ($dest in $destinations) {
-        $dir = Split-Path $dest -Parent
-        if (-not (Test-Path $dir)) {
-            New-Item -ItemType Directory -Path $dir -Force | Out-Null
-        }
-        Copy-Item -Path $source -Destination $dest -Force
-        Write-Host "  -> $dest" -ForegroundColor DarkGray
-    }
-
-    Write-Host "AI instructions updated." -ForegroundColor Green
-}
-
-function Update-Fonts {
-    Write-Host "Updating fonts..." -ForegroundColor DarkGray
-
-    $fontsSource = Join-Path (Split-Path $PSScriptRoot -Parent) "Fonts"
-    if (-not (Test-Path $fontsSource)) {
-        Write-Host "  No fonts directory found, skipping." -ForegroundColor DarkGray
-        return
-    }
-
-    $systemFontsPath = "$env:SystemRoot\Fonts"
-    $fontFiles = Get-ChildItem -Path $fontsSource -Include "*.ttf","*.otf","*.ttc" -Recurse
-
-    if (-not $fontFiles) {
-        Write-Host "  No font files found, skipping." -ForegroundColor DarkGray
-        return
-    }
-
-    foreach ($font in $fontFiles) {
-        $dest = Join-Path $systemFontsPath $font.Name
-        if (Test-Path $dest) {
-            Write-Host "  Already installed: $($font.Name)" -ForegroundColor DarkGray
-            continue
-        }
-
-        Copy-Item -Path $font.FullName -Destination $dest -Force
-        $regPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
-        Set-ItemProperty -Path $regPath -Name $font.BaseName -Value $font.Name
-        Write-Host "  Installed: $($font.Name)" -ForegroundColor DarkGray
-    }
-
-    Write-Host "Fonts updated." -ForegroundColor Green
-}
-
 function Update {
     if (-not (Update-GitPull)) {
         Write-Host "Update aborted." -ForegroundColor Red
         return
     }
 
-    #Update-Fonts
-    Update-AiInstructions
+    # Run the freshly-pulled Install.ps1 in a new process so we pick up any
+    # changes that arrived with the git pull rather than the stale in-memory code.
+    $installScript = Join-Path $PSScriptRoot "Update.Install.ps1"
+    Write-Host "Running install steps..." -ForegroundColor DarkGray
+    & pwsh -NoProfile -File $installScript
 }
 
 Export-ModuleMember -Function Update
