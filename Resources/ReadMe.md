@@ -1,0 +1,1 @@
+- `windows-terminal-icons` was swiped from [here](https://github.com/TheFern2/windows-terminal-icons/tree/main) and will be copied such that they can be referenced as `icons\ubuntu.png`
