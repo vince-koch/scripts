@@ -3,6 +3,18 @@
 
 Try-Import-Module $PSScriptRoot\Console.psm1
 
+function Git-Zip {
+    param(
+        [string]$OutputFile
+    )
+    
+    if (-not $OutputFile) {
+        $OutputFile = "$(Split-Path -Leaf (Get-Location)).zip"
+    }
+
+    git archive --format=zip --output=$OutputFile HEAD
+}
+
 function Git-ChangeBranch {
     # get a list of branches
     [array] $branches = @( git branch )
@@ -150,6 +162,8 @@ function Git-UpdateCheck {
         return 1
     #}
 }
+
+Export-ModuleMember -Function Git-Zip
 
 Set-Alias -Name git-change-branch -Value Git-ChangeBranch
 Export-ModuleMember -Function Git-ChangeBranch -Alias git-change-branch
