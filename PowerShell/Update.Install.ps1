@@ -3,14 +3,21 @@ param(
 )
 
 function Write-Step {
-    param([string]$Message)
+    param(
+        [string]$Message
+    )
+
     if (-not $Quiet) {
         Write-Host $Message -ForegroundColor DarkGray
     }
 }
 
 function Write-StepResult {
-    param([string]$Message, [string]$Color = "Green")
+    param(
+        [string]$Message,
+        [string]$Color = "Green"
+    )
+
     if (-not $Quiet) {
         Write-Host $Message -ForegroundColor $Color
     }
@@ -84,6 +91,28 @@ function Install-Fonts {
     Write-StepResult "Fonts updated."
 }
 
+# ---- Git --------------------------------------------------------------------
+
+function Install-Git {
+    Write-Step "Updating Git configuration..."
+
+
+    # Ensure git exists
+    if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-StepResult "Git is not installed or not found in PATH." "Yellow"
+        return
+    }
+
+    # Set default branch name and check exit code
+    git config --global init.defaultBranch main
+    if ($LASTEXITCODE -ne 0) {
+        Write-StepResult "git config command failed with exit code $LASTEXITCODE" "Yellow"
+        return
+    }
+
+    Write-StepResult "Git configuration updated."
+}
+
 # ---- Windows Terminal Icons -------------------------------------------------
 
 function Install-WindowsTerminalIcons {
@@ -121,4 +150,5 @@ function Install-WindowsTerminalIcons {
 
 Install-AiInstructions
 Install-Fonts
+Install-Git
 Install-WindowsTerminalIcons
