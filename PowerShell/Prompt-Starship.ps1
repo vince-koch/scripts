@@ -1,6 +1,6 @@
 # starship prompt
 
-function Starship-Use-Preset {
+function global:Starship-Use-Preset {
     param (
         [string] $Preset = $null
     )
@@ -34,7 +34,7 @@ function Starship-Use-Preset {
     }
 }
 
-function Use-Starship-Preset {
+function global:Use-Starship-Preset {
     Starship-Use-Preset
 }
 

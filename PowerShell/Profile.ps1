@@ -72,8 +72,7 @@ function Print-Profile-Timers {
     }
 }
 
-
-function Try-Import-Module {
+function global:Try-Import-Module {
     param (
         [Parameter(Mandatory)]
         [string] $ModulePath
@@ -115,10 +114,10 @@ function Try-Import-Module {
 
 $aws_config_path = [System.IO.Path]::Combine($env:USERPROFILE, ".aws", "config")
 $nuget_config_path = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
-function Aws-Config { npp $aws_config }
-function Nuget-Config { npp $nuget_config }
+function global:Aws-Config { npp $aws_config }
+function global:Nuget-Config { npp $nuget_config }
 
-function Less {
+function global:Less {
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [string]$Path
@@ -132,7 +131,7 @@ function Less {
     Get-Content -Path $Path | Out-Host -Paging
 }
 
-function UnZip {
+function global:UnZip {
     param (
         [string]$ZipFile,
         [string]$Destination = "."
@@ -140,7 +139,7 @@ function UnZip {
     Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force @Args
 }
 
-function Which {
+function global:Which {
     param([string]$name)
     (Get-Command $name).Source
 }
