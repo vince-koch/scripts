@@ -144,7 +144,7 @@ function global:Which {
     (Get-Command $name).Source
 }
 
-function Write-Colors {
+function global:Write-Colors {
     $colors = [Enum]::GetValues([System.ConsoleColor])
 
     foreach ($color in $colors) {
@@ -177,6 +177,9 @@ Try-Import-Module $PSScriptRoot\Windows.psm1
 #Start-Profile-Timer -Name "TerminalIcons"
 #. $PSScriptRoot\Profile-TerminalIcons.ps1
 #Stop-Profile-Timer -Name "TerminalIcons"
+if ($PSStyle -and $PSStyle.FileInfo) {
+    $PSStyle.FileInfo.Directory = "`e[34m"
+}
 
 # add $PSScriptRoot to the path
 $env:Path += ";$PSScriptRoot"
