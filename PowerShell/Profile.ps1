@@ -43,6 +43,24 @@
 #     }
 # }
 
+# Spectre Console requires UTF-8 console encoding for box-drawing chars.
+# Set it before importing so we don't trip the warning. Idempotent.
+try {
+    $utf8 = [System.Text.UTF8Encoding]::new()
+    $OutputEncoding = $utf8
+    [console]::InputEncoding  = $utf8
+    [console]::OutputEncoding = $utf8
+    #Write-Host "Encoding set to UTF8" -ForegroundColor DarkGray
+} catch {
+    Write-Host "Failed to set encoding to UTF8" -ForegroundColor Red
+    Write-Host $_.Exception.ToString() -ForegroundColor Magenta
+}
+
+# Pre-import Spectre if available (avoids first-call latency in `cn`).
+#if (Get-Module -ListAvailable -Name PwshSpectreConsole) {
+#    Import-Module PwshSpectreConsole -ErrorAction SilentlyContinue
+#}
+
 function Welcome {
     $edition = if ($PSVersionTable.PSEdition -eq "Desktop") { "Windows PowerShell" } else { "PowerShell Core" }
     Write-Host "$edition " -ForegroundColor Blue -NoNewLine
