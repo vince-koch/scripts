@@ -72,18 +72,18 @@ function Welcome {
 # startup welcome screen
 Welcome
 
-function Start-Profile-Timer($Name) {
+function global:Start-Profile-Timer($Name) {
     if (-not $global:ProfileTimers) { $global:ProfileTimers = @{} }
     $global:ProfileTimers[$Name] = [System.Diagnostics.Stopwatch]::StartNew()
 }
 
-function Stop-Profile-Timer($Name) {
+function global:Stop-Profile-Timer($Name) {
     if ($global:ProfileTimers.ContainsKey($Name)) {
         $global:ProfileTimers[$Name].Stop()
     }
 }
 
-function Print-Profile-Timers {
+function global:Print-Profile-Timers {
     foreach ($key in $global:ProfileTimers.Keys) {
         $timer = $global:ProfileTimers[$key]
         Write-Host "$key took $($timer.Elapsed)"
@@ -124,6 +124,58 @@ function global:Try-Import-Module {
     }
     finally {
         Stop-Profile-Timer -Name "Try-Import-Module $ModulePath"
+    }
+}
+
+# Registers lightweight stub functions for a module's exports.
+# The real module is loaded on first invocation of any stub, then the stub removes itself.
+function global:Register-LazyModule {
+    param (
+        [Parameter(Mandatory)]
+        [string] $ModulePath
+    )
+
+    $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
+    if (-not (Test-Path $resolvedPath)) { return }
+
+    $content = Get-Content $resolvedPath
+
+    $functionNames = $content |
+        ForEach-Object {
+            if ($_ -match '^function\s+([^\s({]+)') { $Matches[1] }
+        } |
+        Where-Object { $_ }
+
+    # Only stub aliases that are explicitly exported
+    $aliasNames = $content |
+        ForEach-Object {
+            if ($_ -match '^\s*Export-ModuleMember.*-Alias\s+(.+)$') {
+                $Matches[1] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+            }
+        } |
+        Where-Object { $_ } |
+        Select-Object -Unique
+
+    foreach ($fn in $functionNames) {
+        $stub = [scriptblock]::Create(
+            "`$__module = Import-Module -Name '$resolvedPath' -DisableNameChecking -Force -Global -PassThru -ErrorAction SilentlyContinue`n" +
+            "if (-not `$__module) { Write-Host ""Failed to lazy-load module '$resolvedPath'"" -ForegroundColor Red; return }`n" +
+            "`$__cmd = `$__module.ExportedFunctions['$fn']`n" +
+            "Remove-Item -Path 'Function:\$fn' -ErrorAction SilentlyContinue`n" +
+            "if (`$__cmd) { & `$__cmd @args } else { Write-Host ""Function '$fn' not exported by '$resolvedPath'"" -ForegroundColor Red }"
+        )
+        Set-Item -Path "Function:\global:$fn" -Value $stub
+    }
+
+    foreach ($alias in $aliasNames) {
+        $stub = [scriptblock]::Create(
+            "`$__module = Import-Module -Name '$resolvedPath' -DisableNameChecking -Force -Global -PassThru -ErrorAction SilentlyContinue`n" +
+            "if (-not `$__module) { Write-Host ""Failed to lazy-load module '$resolvedPath'"" -ForegroundColor Red; return }`n" +
+            "`$__cmd = `$__module.ExportedAliases['$alias']`n" +
+            "Remove-Item -Path 'Function:\$alias' -ErrorAction SilentlyContinue`n" +
+            "if (`$__cmd) { & `$__cmd @args } else { Write-Host ""Alias '$alias' not exported by '$resolvedPath'"" -ForegroundColor Red }"
+        )
+        Set-Item -Path "Function:\global:$alias" -Value $stub
     }
 }
 
@@ -172,24 +224,24 @@ function global:Write-Colors {
 }
 
 # load modules
-Try-Import-Module $PSScriptRoot\Alias.psm1
-Try-Import-Module $PSScriptRoot\Aws.psm1
-Try-Import-Module $PSScriptRoot\Bookmark.psm1
-Try-Import-Module $PSScriptRoot\Console.psm1
-Try-Import-Module $PSScriptRoot\Config.psm1
-Try-Import-Module $PSScriptRoot\Docker.psm1
-Try-Import-Module $PSScriptRoot\Environment.psm1
-Try-Import-Module $PSScriptRoot\Files.psm1
-Try-Import-Module $PSScriptRoot\Git.psm1
-Try-Import-Module $PSScriptRoot\Mongo.psm1
-Try-Import-Module $PSScriptRoot\Notepad++.psm1
-Try-Import-Module $PSScriptRoot\Ps.psm1
-Try-Import-Module $PSScriptRoot\Shebang.psm1
-Try-Import-Module $PSScriptRoot\Studio3T.psm1
-Try-Import-Module $PSScriptRoot\TabsToSpaces.psm1
-Try-Import-Module $PSScriptRoot\Update.psm1
-Try-Import-Module $PSScriptRoot\VisualStudio.psm1
-Try-Import-Module $PSScriptRoot\Windows.psm1
+Try-Import-Module $PSScriptRoot\Alias.psm1     # eager: runs Register-AliasFunctions at load time
+Register-LazyModule $PSScriptRoot\Aws.psm1
+Register-LazyModule $PSScriptRoot\Bookmark.psm1
+Register-LazyModule $PSScriptRoot\Console.psm1
+Register-LazyModule $PSScriptRoot\Config.psm1
+Register-LazyModule $PSScriptRoot\Docker.psm1
+Register-LazyModule $PSScriptRoot\Environment.psm1
+Register-LazyModule $PSScriptRoot\Files.psm1
+Register-LazyModule $PSScriptRoot\Git.psm1
+Register-LazyModule $PSScriptRoot\Mongo.psm1
+Register-LazyModule $PSScriptRoot\Notepad++.psm1
+Register-LazyModule $PSScriptRoot\Ps.psm1
+Register-LazyModule $PSScriptRoot\Shebang.psm1
+Register-LazyModule $PSScriptRoot\Studio3T.psm1
+Register-LazyModule $PSScriptRoot\TabsToSpaces.psm1
+Register-LazyModule $PSScriptRoot\Update.psm1
+Register-LazyModule $PSScriptRoot\VisualStudio.psm1
+Register-LazyModule $PSScriptRoot\Windows.psm1
 
 #Start-Profile-Timer -Name "TerminalIcons"
 #. $PSScriptRoot\Profile-TerminalIcons.ps1
