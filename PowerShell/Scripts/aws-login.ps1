@@ -1,3 +1,6 @@
+#Requires -Version 7.4
+#Requires -Modules PwshSpectreConsole
+
 param(
     [Parameter(Mandatory = $false)]
     [string]$Profile
@@ -57,38 +60,15 @@ function Select-AwsProfile
 
     if (-not $profiles)
     {
-        Write-Host "No AWS profiles found."
+        Write-Host "No AWS profiles found." -ForegroundColor Red
+        Write-Host "Please configure AWS profiles using 'aws configure' or by editing ~/.aws"
         exit 1
     }
 
-    Write-Host ""
-    Write-Host "Available AWS Profiles"
-    Write-Host "----------------------"
+    $profile = Read-SpectreSelection `
+        -Title "Choose an [darkorange]AWS Profile[/]" `
+        -Choices @( $profiles )
 
-    for ($i = 0; $i -lt $profiles.Count; $i++)
-    {
-        Write-Host "$($i + 1)) $($profiles[$i])"
-    }
-
-    Write-Host ""
-
-    do
-    {
-        $selection = Read-Host "Select profile number"
-
-        $valid =
-            [int]::TryParse($selection, [ref]$null) -and
-            [int]$selection -ge 1 -and
-            [int]$selection -le $profiles.Count
-
-        if (-not $valid)
-        {
-            Write-Host "Invalid selection." -ForegroundColor Red
-        }
-
-    } while (-not $valid)
-
-    $profile = $profiles[[int]$selection - 1]
     return $profile
 }
 
@@ -182,9 +162,7 @@ function Invoke-AwsLogin
     )
 
     # Login to AWS
-    Write-Host ""
-    Write-Host "Logging into profile '$Profile'..." -ForegroundColor Cyan
-    Write-Host ""
+    Write-SpectreHost "🔐 Logging into profile [darkorange]$Profile[/]"
 
     # aws sso login --profile $Profile
     # Assert-Success "AWS SSO Login"
