@@ -24,6 +24,7 @@ $commands = @(
     'config'
     'Docker-StartInteractive'
     'env'
+    'Git-Zip'
     'git-change-branch'
     'git-delete-branches'
     'search'

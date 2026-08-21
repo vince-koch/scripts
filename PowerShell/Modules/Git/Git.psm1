@@ -2,15 +2,130 @@
 # Import-Module $PSScriptRoot\Git.psm1 -DisableNameChecking -Force
 
 function Git-Zip {
+    <#
+    .SYNOPSIS
+        Creates a configurable ZIP snapshot of the current Git repository.
+    .DESCRIPTION
+        Uses a checkbox menu by default. Tracked working-tree files and untracked,
+        non-ignored files are streamed directly into the ZIP without staging copies.
+    #>
+    [CmdletBinding()]
     param(
-        [string]$OutputFile
+        [Parameter(Position = 0)]
+        [string]$OutputFile,
+
+        [switch]$IncludeChanges,
+
+        [switch]$IncludeUntracked,
+
+        [switch]$NoPrompt
     )
-    
-    if (-not $OutputFile) {
-        $OutputFile = "$(Split-Path -Leaf (Get-Location)).zip"
+
+    $repositoryRoot = git rev-parse --show-toplevel 2>$null
+    if ($LASTEXITCODE -ne 0 -or -not $repositoryRoot) {
+        throw 'The current directory is not inside a Git repository.'
+    }
+    $repositoryRoot = [System.IO.Path]::GetFullPath([string]$repositoryRoot)
+
+    if (-not $NoPrompt -and
+        -not $PSBoundParameters.ContainsKey('IncludeChanges') -and
+        -not $PSBoundParameters.ContainsKey('IncludeUntracked')) {
+        Import-Module PwshSpectreConsole -ErrorAction Stop
+        $options = @(
+            'Include uncommitted changes'
+            'Include untracked files'
+        )
+        [string[]]$selectedOptions = @(
+            Read-SpectreMultiSelection `
+                -Message 'Select ZIP contents' `
+                -Choices $options `
+                -Color 'Cyan1'
+        )
+        $IncludeChanges = 'Include uncommitted changes' -in $selectedOptions
+        $IncludeUntracked = 'Include untracked files' -in $selectedOptions
     }
 
-    git archive --format=zip --output=$OutputFile HEAD
+    if (-not $OutputFile) {
+        $OutputFile = "$(Split-Path -Leaf $repositoryRoot).zip"
+    }
+    if (-not [System.IO.Path]::IsPathRooted($OutputFile)) {
+        $OutputFile = Join-Path (Get-Location) $OutputFile
+    }
+    $OutputFile = [System.IO.Path]::GetFullPath($OutputFile)
+
+    if ([System.IO.File]::Exists($OutputFile)) {
+        throw "Output file already exists: $OutputFile"
+    }
+    $outputDirectory = Split-Path $OutputFile -Parent
+    if (-not [System.IO.Directory]::Exists($outputDirectory)) {
+        throw "Output directory does not exist: $outputDirectory"
+    }
+
+    $addFiles = {
+        param(
+            [System.IO.Compression.ZipArchive]$Archive,
+            [string[]]$Paths
+        )
+
+        foreach ($relativePath in $Paths) {
+            $sourcePath = Join-Path $repositoryRoot $relativePath
+            if (-not [System.IO.File]::Exists($sourcePath)) { continue }
+            if ([System.IO.Path]::GetFullPath($sourcePath) -eq $OutputFile) { continue }
+
+            $entryName = $relativePath.Replace('\', '/')
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $Archive,
+                $sourcePath,
+                $entryName,
+                [System.IO.Compression.CompressionLevel]::Optimal
+            ) | Out-Null
+        }
+    }
+
+    try {
+        if ($IncludeChanges) {
+            [string[]]$trackedFiles = @(git -C $repositoryRoot ls-files --cached)
+            $stream = [System.IO.File]::Open($OutputFile, [System.IO.FileMode]::CreateNew)
+            try {
+                $archive = [System.IO.Compression.ZipArchive]::new(
+                    $stream,
+                    [System.IO.Compression.ZipArchiveMode]::Create,
+                    $false
+                )
+                try { & $addFiles $archive $trackedFiles }
+                finally { $archive.Dispose() }
+            }
+            finally { $stream.Dispose() }
+        }
+        else {
+            git -C $repositoryRoot archive --format=zip --output=$OutputFile HEAD
+            if ($LASTEXITCODE -ne 0) { throw 'git archive failed.' }
+        }
+
+        if ($IncludeUntracked) {
+            [string[]]$untrackedFiles = @(git -C $repositoryRoot ls-files --others --exclude-standard)
+            $stream = [System.IO.File]::Open($OutputFile, [System.IO.FileMode]::Open, [System.IO.FileAccess]::ReadWrite)
+            try {
+                $archive = [System.IO.Compression.ZipArchive]::new(
+                    $stream,
+                    [System.IO.Compression.ZipArchiveMode]::Update,
+                    $false
+                )
+                try { & $addFiles $archive $untrackedFiles }
+                finally { $archive.Dispose() }
+            }
+            finally { $stream.Dispose() }
+        }
+    }
+    catch {
+        if ([System.IO.File]::Exists($OutputFile)) {
+            [System.IO.File]::Delete($OutputFile)
+        }
+        throw
+    }
+
+    Write-Host 'Created ' -NoNewline
+    Write-Host $OutputFile -ForegroundColor Cyan
 }
 
 function Git-ChangeBranch {
