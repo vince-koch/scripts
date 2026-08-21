@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    Starts an AWS SSO login session.
+.DESCRIPTION
+    Selects an AWS profile interactively when one is not supplied and invokes the AWS CLI login.
+#>
+
 #Requires -Version 7.4
 #Requires -Modules PwshSpectreConsole
 
@@ -55,8 +62,7 @@ function Select-AwsProfile
 {
     # Fast method: read config file directly
     # $profiles = aws configure list-profiles # Slow method: use AWS CLI (commented out for performance)
-    $profiles = Get-AwsProfiles
-    $profiles = $profiles | Sort-Object
+    [string[]]$profiles = @(Get-AwsProfiles | Sort-Object)
 
     if (-not $profiles)
     {
@@ -65,11 +71,24 @@ function Select-AwsProfile
         exit 1
     }
 
-    $profile = Read-SpectreSelection `
-        -Title "Choose an [darkorange]AWS Profile[/]" `
-        -Choices @( $profiles )
+    if (-not (Get-Module -Name PwshSpectreConsole))
+    {
+        if (-not (Get-Module -ListAvailable -Name PwshSpectreConsole))
+        {
+            throw 'Profile selection requires PwshSpectreConsole. Install it with: Install-Module PwshSpectreConsole -Scope CurrentUser'
+        }
 
-    return $profile
+        Import-Module PwshSpectreConsole -ErrorAction Stop
+    }
+
+    $selectionParameters = @{
+        Message      = 'Select an AWS profile'
+        Choices      = $profiles
+        EnableSearch = $true
+        Color        = 'Cyan1'
+    }
+
+    return Read-SpectreSelection @selectionParameters
 }
 
 
@@ -237,7 +256,7 @@ function Invoke-AwsLogin
 if ($Profile)
 {
     # Profile provided via parameter - validate it exists
-    $allProfiles = Get-AwsProfiles
+    [string[]]$allProfiles = @(Get-AwsProfiles)
     if ($allProfiles -notcontains $Profile)
     {
         Write-Host "Profile '$Profile' not found." -ForegroundColor Red

@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    Defines reusable Unicode symbols.
+.DESCRIPTION
+    Creates variables for common status, ballot, navigation, and terminal glyphs.
+#>
+
 # https://www.codetable.net/unicodecharacters?page=33
 # https://www.compart.com/en/unicode/
 

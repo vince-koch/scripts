@@ -1,3 +1,9 @@
+<#
+.SYNOPSIS
+    Applies local installation steps after updating this repository.
+.DESCRIPTION
+    Refreshes configured links and related setup, with optional quiet output.
+#>
 param(
     [switch]$Quiet
 )

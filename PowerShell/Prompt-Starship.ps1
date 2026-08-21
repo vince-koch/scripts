@@ -1,4 +1,9 @@
-# starship prompt
+<#
+.SYNOPSIS
+    Enables and configures the Starship prompt.
+.DESCRIPTION
+    Initializes Starship and provides commands for selecting a saved prompt preset.
+#>
 
 function global:Starship-Use-Preset {
     param (
@@ -8,9 +13,14 @@ function global:Starship-Use-Preset {
     [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, '..', 'Resources', 'Starship-Presets', 'toml')
 
     if ([string]::IsNullOrWhiteSpace($Preset)) {
+        Import-Module PwshSpectreConsole -ErrorAction Stop
         $presets = [System.IO.Directory]::GetFiles($presetFolder, "*.toml")
         $presetNames = $presets | ForEach-Object { [System.IO.Path]::GetFileNameWithoutExtension($_) }
-        $Preset = Console-Menu -Items $presetNames -Title "Select Starship Preset"
+        $Preset = Read-SpectreSelection `
+            -Message 'Select a Starship preset' `
+            -Choices $presetNames `
+            -EnableSearch `
+            -Color 'Cyan1'
     }
 
     if (-not [string]::IsNullOrWhiteSpace($Preset)) {

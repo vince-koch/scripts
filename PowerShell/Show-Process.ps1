@@ -1,3 +1,9 @@
+<#
+.SYNOPSIS
+    Brings a process window to the foreground.
+.DESCRIPTION
+    Defines Show-Process for restoring or maximizing a process's main Windows window.
+#>
 function Show-Process($process, [switch] $Maximize)
 {
     $Signature = '

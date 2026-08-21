@@ -1,10 +1,16 @@
+<#
+.SYNOPSIS
+    Opens a Visual Studio solution, project, or specified path.
+.DESCRIPTION
+    With no file or with '.', opens the single solution or project in the current directory.
+#>
 [CmdletBinding()]
 param(
     [Parameter(Position = 0)]
     [string]$File
 )
 
-if ($File) {
+if ($File -and $File -ne '.') {
     start $File
     return
 }

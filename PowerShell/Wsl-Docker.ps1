@@ -1,3 +1,9 @@
+<#
+.SYNOPSIS
+    Provides helpers for using Docker through WSL.
+.DESCRIPTION
+    Translates Windows paths for WSL and ensures the WSL Docker service is available.
+#>
 Function Wsl-TranslatePath {
     param (
         [string] $path
