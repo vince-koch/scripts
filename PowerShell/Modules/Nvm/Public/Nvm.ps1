@@ -329,16 +329,16 @@ function Cmd-Search($filter) {
 
 function Show-Help {
     Write-Host ""
-    Write-Host "nvm.ps1 - Node Version Manager (user-level, no admin required)" -ForegroundColor Cyan
+    Write-Host "nvm - Node Version Manager (user-level, no admin required)" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "Usage:" -ForegroundColor Yellow
-    Write-Host "  .\nvm.ps1 home                  Print NVM_HOME"
-    Write-Host "  .\nvm.ps1 home <path>           Set NVM_HOME"
-    Write-Host "  .\nvm.ps1 install <version>     Download and install Node (e.g. 20.11.0)"
-    Write-Host "  .\nvm.ps1 uninstall <version>   Remove an installed Node version"
-    Write-Host "  .\nvm.ps1 use <version>         Switch the active Node version"
-    Write-Host "  .\nvm.ps1 list                  List installed versions"
-    Write-Host "  .\nvm.ps1 search [prefix]       Search available releases on nodejs.org"
+    Write-Host "  nvm home                  Print NVM_HOME"
+    Write-Host "  nvm home <path>           Set NVM_HOME"
+    Write-Host "  nvm install <version>     Download and install Node (e.g. 20.11.0)"
+    Write-Host "  nvm uninstall <version>   Remove an installed Node version"
+    Write-Host "  nvm use <version>         Switch the active Node version"
+    Write-Host "  nvm list                  List installed versions"
+    Write-Host "  nvm search [prefix]       Search available releases on nodejs.org"
     Write-Host ""
     Write-Host "Environment variables managed:" -ForegroundColor Yellow
     Write-Host "  NVM_HOME    Root folder containing all Node installations"
@@ -347,18 +347,27 @@ function Show-Help {
     Write-Host ""
 }
 
-# ── Parse arguments ──────────────────────────
+# ── Public entry point ───────────────────────
 
-$cmd     = if ($args.Count -gt 0) { $args[0].ToLower() } else { "" }
-$cmdArgs = if ($args.Count -gt 1) { $args[1..($args.Count-1)] } else { @() }
+function Invoke-Nvm {
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0, ValueFromRemainingArguments)]
+        [string[]]$ArgumentList
+    )
 
-switch ($cmd) {
-    "home"      { Cmd-Home      ($cmdArgs | Select-Object -First 1) }
-    "install"   { Cmd-Install   ($cmdArgs | Select-Object -First 1) }
-    "uninstall" { Cmd-Uninstall ($cmdArgs | Select-Object -First 1) }
-    "use"       { Cmd-Use       ($cmdArgs | Select-Object -First 1) }
-    "list"      { Cmd-List }
-    "ls"        { Cmd-List }
-    "search"    { Cmd-Search    ($cmdArgs | Select-Object -First 1) }
-    default     { Show-Help }
+    [string[]]$arguments = @($ArgumentList)
+    $cmd = if ($arguments.Count -gt 0) { $arguments[0].ToLower() } else { '' }
+    $cmdArgs = if ($arguments.Count -gt 1) { $arguments[1..($arguments.Count - 1)] } else { @() }
+
+    switch ($cmd) {
+        'home'      { Cmd-Home      ($cmdArgs | Select-Object -First 1) }
+        'install'   { Cmd-Install   ($cmdArgs | Select-Object -First 1) }
+        'uninstall' { Cmd-Uninstall ($cmdArgs | Select-Object -First 1) }
+        'use'       { Cmd-Use       ($cmdArgs | Select-Object -First 1) }
+        'list'      { Cmd-List }
+        'ls'        { Cmd-List }
+        'search'    { Cmd-Search    ($cmdArgs | Select-Object -First 1) }
+        default     { Show-Help }
+    }
 }

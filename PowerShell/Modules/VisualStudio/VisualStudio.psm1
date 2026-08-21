@@ -50,8 +50,13 @@ function Handle-VisualStudio {
     # }
 }
 
+$publicRoot = Join-Path $PSScriptRoot 'Public'
+. (Join-Path $publicRoot 'Open.ps1')
+
+Set-Alias -Name vs -Value Open-VisualStudio
 
 Export-ModuleMember -Function Is-VisualStudioCode
 Export-ModuleMember -Function Handle-VisualStudioCode
 Export-ModuleMember -Function Is-VisualStudio
 Export-ModuleMember -Function Handle-VisualStudio
+Export-ModuleMember -Function Open-VisualStudio -Alias vs

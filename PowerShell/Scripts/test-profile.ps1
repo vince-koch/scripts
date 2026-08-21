@@ -17,12 +17,14 @@ $watch = [System.Diagnostics.Stopwatch]::StartNew()
 . $profilePath
 $watch.Stop()
 
-$moduleNames = @('Bookmark', 'Config', 'Docker', 'Environment', 'Files', 'Git', 'Windows')
+$moduleNames = @('Bookmark', 'Config', 'Docker', 'DotNet', 'Environment', 'Files', 'Git', 'Nvm', 'VisualStudio', 'Windows')
 $modulesLoadedAtStart = @($moduleNames | Where-Object { Get-Module -Name $_ })
 $commands = @(
     'ccd'
     'config'
     'Docker-StartInteractive'
+    'dotnet-clean'
+    'dotnet-secrets'
     'env'
     'find-files'
     'find-modules'
@@ -30,10 +32,12 @@ $commands = @(
     'git-change-branch'
     'git-delete-branches'
     'less'
+    'nvm'
     'search'
     'tail'
     'touch'
     'unzip'
+    'vs'
     'windows'
 )
 $missingCommands = @($commands | Where-Object { -not (Get-Command $_ -ErrorAction Ignore) })
@@ -82,7 +86,7 @@ $checks.GetEnumerator() | ForEach-Object {
 
 $passed = $result.CommandsFound -and
     ($result.ModulesAtStartup -eq 0) -and
-    ($result.ModulesAfterLookup -eq 7) -and
+    ($result.ModulesAfterLookup -eq 10) -and
     ($result.ProfilePathCopies -eq 1) -and
     ($result.ScriptPathCopies -eq 1)
 
