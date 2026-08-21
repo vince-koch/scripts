@@ -1,3 +1,9 @@
+<#
+.SYNOPSIS
+    Mounts a LocalStack S3 bucket as a local path.
+.DESCRIPTION
+    Optionally creates the bucket, prepares the mount point, and starts the S3 mount process.
+#>
 param(
     [string]$BucketName   = 'pareo-local',
 
@@ -38,6 +44,7 @@ function Ensure-DockerRunning {
         Write-Error 'Docker is not installed or not on PATH.'
         exit 1
     }
+    
     $dockerInfo = Invoke-Cli -Command { docker info --format 'Server Version: {{.ServerVersion}}  |  OS: {{.OperatingSystem}}' } -ErrorMessage 'Docker daemon is not running.'
     Write-Host "Docker: $dockerInfo"
 }

@@ -1,3 +1,9 @@
+<#
+.SYNOPSIS
+    Starts an AWS SSO login session.
+.DESCRIPTION
+    Selects an AWS profile interactively when one is not supplied and invokes the AWS CLI login.
+#>
 param(
     [Parameter(Mandatory = $false)]
     [string]$Profile
@@ -52,8 +58,7 @@ function Select-AwsProfile
 {
     # Fast method: read config file directly
     # $profiles = aws configure list-profiles # Slow method: use AWS CLI (commented out for performance)
-    $profiles = Get-AwsProfiles
-    $profiles = $profiles | Sort-Object
+    [string[]]$profiles = @(Get-AwsProfiles | Sort-Object)
 
     if (-not $profiles)
     {
@@ -61,35 +66,24 @@ function Select-AwsProfile
         exit 1
     }
 
-    Write-Host ""
-    Write-Host "Available AWS Profiles"
-    Write-Host "----------------------"
-
-    for ($i = 0; $i -lt $profiles.Count; $i++)
+    if (-not (Get-Module -Name PwshSpectreConsole))
     {
-        Write-Host "$($i + 1)) $($profiles[$i])"
-    }
-
-    Write-Host ""
-
-    do
-    {
-        $selection = Read-Host "Select profile number"
-
-        $valid =
-            [int]::TryParse($selection, [ref]$null) -and
-            [int]$selection -ge 1 -and
-            [int]$selection -le $profiles.Count
-
-        if (-not $valid)
+        if (-not (Get-Module -ListAvailable -Name PwshSpectreConsole))
         {
-            Write-Host "Invalid selection." -ForegroundColor Red
+            throw 'Profile selection requires PwshSpectreConsole. Install it with: Install-Module PwshSpectreConsole -Scope CurrentUser'
         }
 
-    } while (-not $valid)
+        Import-Module PwshSpectreConsole -ErrorAction Stop
+    }
 
-    $profile = $profiles[[int]$selection - 1]
-    return $profile
+    $selectionParameters = @{
+        Message      = 'Select an AWS profile'
+        Choices      = $profiles
+        EnableSearch = $true
+        Color        = 'Cyan1'
+    }
+
+    return Read-SpectreSelection @selectionParameters
 }
 
 
@@ -259,7 +253,7 @@ function Invoke-AwsLogin
 if ($Profile)
 {
     # Profile provided via parameter - validate it exists
-    $allProfiles = Get-AwsProfiles
+    [string[]]$allProfiles = @(Get-AwsProfiles)
     if ($allProfiles -notcontains $Profile)
     {
         Write-Host "Profile '$Profile' not found." -ForegroundColor Red

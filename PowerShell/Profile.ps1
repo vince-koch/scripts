@@ -1,49 +1,12 @@
-# function Prompt-ConfirmWithTimeout {
-#     param (
-#         [string]$Message,
-#         [string]$Default = 'Y',  # Default choice
-#         [int]$Timeout = 10
-#     )
-#
-#     $defaultText = if ($Default -eq 'Y') { "(Y/N)" } else { "(y/n)" }
-#     $timeoutTime = [System.DateTime]::Now.AddSeconds($Timeout)
-#
-#     while ([System.DateTime]::Now -lt $timeoutTime) {
-#         Start-Sleep -Milliseconds 1001
-#
-#         $remainingTime = $timeoutTime - [System.DateTime]::Now
-#         $remainingSeconds = [math]::Ceiling($remainingTime.TotalSeconds)
-#         Write-Host "`r$Message $defaultText $remainingSeconds " -NoNewline
-#
-#         if ([Console]::KeyAvailable) {
-#             $keyPress = [System.Console]::ReadKey($true)
-#             if ($keyPress.Key -eq [ConsoleKey]::Y) {
-#                 Write-Host "Y" -ForegroundColor Green
-#                 return $true
-#             } elseif ($keyPress.Key -eq [ConsoleKey]::N) {
-#                 Write-Host "N" -ForegroundColor Red
-#                 return $false
-#             }
-#         }
-#     }
-#
-#     # Timeout occurred, use the default value
-#     Write-Host "$Default (timeout)" -ForegroundColor Yellow
-#     return $Default -eq 'Y'
-# }
+<#
+.SYNOPSIS
+    Configures the primary interactive PowerShell environment.
+.DESCRIPTION
+    Sets console defaults, defines core helpers, and registers local modules for lazy loading.
+#>
 
-# if ($PSVersionTable.PSVersion.Major -lt 7) {
-#     Write-Host "Detected Windows PowerShell version $($PSVersionTable.PSVersion)" -ForegroundColor Yellow
-#     $launch = Prompt-ConfirmWithTimeout -Message "Would you like to launch PowerShell Core instead?" -Default 'Y' -Timeout 10
-#     if ($launch) {
-#         Write-Host "Launching PowerShell Core..." -ForegroundColor Green
-#         & pwsh
-#         Write-Host "Resuming PowerShell $($PSVersionTable.PSVersion)" -ForegroundColor Yellow
-#         exit
-#     }
-# }
 
-# Spectre Console requires UTF-8 console encoding for box-drawing chars.
+# Let's just always have a UTF-8 console encoding
 # Set it before importing so we don't trip the warning. Idempotent.
 try {
     $utf8 = [System.Text.UTF8Encoding]::new()
@@ -56,201 +19,54 @@ try {
     Write-Host $_.Exception.ToString() -ForegroundColor Magenta
 }
 
-# Pre-import Spectre if available (avoids first-call latency in `cn`).
-#if (Get-Module -ListAvailable -Name PwshSpectreConsole) {
-#    Import-Module PwshSpectreConsole -ErrorAction SilentlyContinue
-#}
 
-function Welcome {
-    $edition = if ($PSVersionTable.PSEdition -eq "Desktop") { "Windows PowerShell" } else { "PowerShell Core" }
-    Write-Host "$edition " -ForegroundColor Blue -NoNewLine
-    Write-Host "$($PSVersionTable.PSVersion)" -ForegroundColor Cyan
-    Write-Host "$($PSScriptRoot)$([System.IO.Path]::DirectorySeparatorChar)" -ForegroundColor Gray -NoNewLine
-    Write-Host "$([System.IO.Path]::GetFileName($PSCommandPath))" -ForegroundColor Gray
+# A compact welcome banner with the shell, machine, date, and current location.
+$edition = if ($PSVersionTable.PSEdition -eq 'Desktop') { 'Windows PowerShell' } else { 'PowerShell' }
+$hostEnvironment = if ($env:TERM_PROGRAM -eq 'vscode') { "VS Code $env:TERM_PROGRAM_VERSION" } elseif ($env:VisualStudioEdition) { "Visual Studio $env:VisualStudioVersion" }
+$location = (Get-Location).Path
+$date = Get-Date -Format 'dddd, MMMM d'
+
+if ($PSStyle) {
+    $reset = $PSStyle.Reset
+    $dim = $PSStyle.Foreground.BrightBlack
+    $hostSuffix = if ($hostEnvironment) { "  ${dim}•${reset}  $($PSStyle.Foreground.Green)$hostEnvironment${reset}" } else { '' }
+    Write-Host "${dim}╭─${reset} $($PSStyle.Foreground.Blue)$edition${reset} $($PSStyle.Foreground.Cyan)$($PSVersionTable.PSVersion)${reset}  ${dim}•${reset}  $($PSStyle.Foreground.Magenta)$env:USERNAME@$env:COMPUTERNAME${reset}$hostSuffix"
+    Write-Host "${dim}╰─${reset} $($PSStyle.Foreground.Yellow)$date${reset}  ${dim}•${reset}  $($PSStyle.Foreground.Cyan)$location${reset}"
 }
-
-# startup welcome screen
-Welcome
-
-function global:Start-Profile-Timer($Name) {
-    if (-not $global:ProfileTimers) { $global:ProfileTimers = @{} }
-    $global:ProfileTimers[$Name] = [System.Diagnostics.Stopwatch]::StartNew()
-}
-
-function global:Stop-Profile-Timer($Name) {
-    if ($global:ProfileTimers.ContainsKey($Name)) {
-        $global:ProfileTimers[$Name].Stop()
-    }
-}
-
-function global:Print-Profile-Timers {
-    foreach ($key in $global:ProfileTimers.Keys) {
-        $timer = $global:ProfileTimers[$key]
-        Write-Host "$key took $($timer.Elapsed)"
-    }
-}
-
-function global:Try-Import-Module {
-    param (
-        [Parameter(Mandatory)]
-        [string] $ModulePath
-    )
-
-    Start-Profile-Timer -Name "Try-Import-Module $ModulePath"
-
-    try {
-        $IsDebug = $false
-        $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
-
-        # Check if module with that path is already loaded
-        $alreadyLoaded = Get-Module | Where-Object {
-            $_.Path -and ($_.Path -eq $resolvedPath)
-        }
-
-        if (-not $alreadyLoaded) {
-            try {
-                Import-Module -Name $resolvedPath -DisableNameChecking -Force -ErrorAction Stop
-                if ($IsDebug) {
-                    Write-Host "Loaded module $([System.IO.Path]::GetFileNameWithoutExtension($resolvedPath))" -ForegroundColor DarkGray
-                }
-            }
-            catch {
-                Write-Host "Failed to import module from path '$resolvedPath': $_" -ForegroundColor Red
-            }
-        }
-        elseif ($IsDebug) {
-            Write-Host "Skipped already-loaded module: $resolvedPath" -ForegroundColor DarkGray
-        }
-    }
-    finally {
-        Stop-Profile-Timer -Name "Try-Import-Module $ModulePath"
-    }
-}
-
-# Registers lightweight stub functions for a module's exports.
-# The real module is loaded on first invocation of any stub, then the stub removes itself.
-function global:Register-LazyModule {
-    param (
-        [Parameter(Mandatory)]
-        [string] $ModulePath
-    )
-
-    $resolvedPath = [System.IO.Path]::GetFullPath($ModulePath)
-    if (-not (Test-Path $resolvedPath)) { return }
-
-    $content = Get-Content $resolvedPath
-
-    $functionNames = $content |
-        ForEach-Object {
-            if ($_ -match '^function\s+([^\s({]+)') { $Matches[1] }
-        } |
-        Where-Object { $_ }
-
-    # Only stub aliases that are explicitly exported
-    $aliasNames = $content |
-        ForEach-Object {
-            if ($_ -match '^\s*Export-ModuleMember.*-Alias\s+(.+)$') {
-                $Matches[1] -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }
-            }
-        } |
-        Where-Object { $_ } |
-        Select-Object -Unique
-
-    foreach ($fn in $functionNames) {
-        $stub = [scriptblock]::Create(
-            "`$__module = Import-Module -Name '$resolvedPath' -DisableNameChecking -Force -Global -PassThru -ErrorAction SilentlyContinue`n" +
-            "if (-not `$__module) { Write-Host ""Failed to lazy-load module '$resolvedPath'"" -ForegroundColor Red; return }`n" +
-            "`$__cmd = `$__module.ExportedFunctions['$fn']`n" +
-            "Remove-Item -Path 'Function:\$fn' -ErrorAction SilentlyContinue`n" +
-            "if (`$__cmd) { & `$__cmd @args } else { Write-Host ""Function '$fn' not exported by '$resolvedPath'"" -ForegroundColor Red }"
-        )
-        Set-Item -Path "Function:\global:$fn" -Value $stub
-    }
-
-    foreach ($alias in $aliasNames) {
-        $stub = [scriptblock]::Create(
-            "`$__module = Import-Module -Name '$resolvedPath' -DisableNameChecking -Force -Global -PassThru -ErrorAction SilentlyContinue`n" +
-            "if (-not `$__module) { Write-Host ""Failed to lazy-load module '$resolvedPath'"" -ForegroundColor Red; return }`n" +
-            "`$__cmd = `$__module.ExportedAliases['$alias']`n" +
-            "Remove-Item -Path 'Function:\$alias' -ErrorAction SilentlyContinue`n" +
-            "if (`$__cmd) { & `$__cmd @args } else { Write-Host ""Alias '$alias' not exported by '$resolvedPath'"" -ForegroundColor Red }"
-        )
-        Set-Item -Path "Function:\global:$alias" -Value $stub
-    }
+else {
+    $hostSuffix = if ($hostEnvironment) { "  •  $hostEnvironment" } else { '' }
+    Write-Host "╭─ $edition $($PSVersionTable.PSVersion)  •  $env:USERNAME@$env:COMPUTERNAME$hostSuffix" -ForegroundColor Cyan
+    Write-Host "╰─ $date  •  $location" -ForegroundColor DarkGray
 }
 
 
-# random variables, functions, and aliases
-
-$aws_config_path = [System.IO.Path]::Combine($env:USERPROFILE, ".aws", "config")
-$nuget_config_path = [System.IO.Path]::Combine($env:APPDATA, "Nuget", "Nuget.config")
-function global:Aws-Config { npp $aws_config }
-function global:Nuget-Config { npp $nuget_config }
-
-function global:Less {
-    param(
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string]$Path
-    )
-
-    if (-not (Test-Path $Path)) {
-        Write-Host "File not found: $Path" -ForegroundColor Red
-        return
-    }
-
-    Get-Content -Path $Path | Out-Host -Paging
-}
-
-function global:UnZip {
-    param (
-        [string]$ZipFile,
-        [string]$Destination = "."
-    )
-    Expand-Archive -Path $ZipFile -DestinationPath $Destination -Force @Args
-}
-
-function global:Which {
-    param([string]$name)
-    (Get-Command $name).Source
-}
-
-function global:Write-Colors {
-    $colors = [Enum]::GetValues([System.ConsoleColor])
-
-    foreach ($color in $colors) {
-        Write-Host ("{0,-15}" -f $color) -ForegroundColor $color -NoNewLine
-        Write-Host ("{0,-15}" -f $color)
-    }
-}
-
-# load modules
-Try-Import-Module $PSScriptRoot\Alias.psm1     # eager: runs Register-AliasFunctions at load time
-Register-LazyModule $PSScriptRoot\Aws.psm1
-Register-LazyModule $PSScriptRoot\Bookmark.psm1
-Register-LazyModule $PSScriptRoot\Console.psm1
-Register-LazyModule $PSScriptRoot\Config.psm1
-Register-LazyModule $PSScriptRoot\Docker.psm1
-Register-LazyModule $PSScriptRoot\Environment.psm1
-Register-LazyModule $PSScriptRoot\Files.psm1
-Register-LazyModule $PSScriptRoot\Git.psm1
-Register-LazyModule $PSScriptRoot\Mongo.psm1
-Register-LazyModule $PSScriptRoot\Notepad++.psm1
-Register-LazyModule $PSScriptRoot\Ps.psm1
-Register-LazyModule $PSScriptRoot\Shebang.psm1
-Register-LazyModule $PSScriptRoot\Studio3T.psm1
-Register-LazyModule $PSScriptRoot\TabsToSpaces.psm1
-Register-LazyModule $PSScriptRoot\Update.psm1
-Register-LazyModule $PSScriptRoot\VisualStudio.psm1
-Register-LazyModule $PSScriptRoot\Windows.psm1
-
-#Start-Profile-Timer -Name "TerminalIcons"
-#. $PSScriptRoot\Profile-TerminalIcons.ps1
-#Stop-Profile-Timer -Name "TerminalIcons"
+# default directory display is terrible, so let's make it blue.
+# This is a no-op if the PSStyle object isn't available (e.g., in Windows PowerShell).
 if ($PSStyle -and $PSStyle.FileInfo) {
     $PSStyle.FileInfo.Directory = "`e[34m"
 }
 
-# add $PSScriptRoot to the path
-$env:Path += ";$PSScriptRoot"
-$env:Path += ";$PSScriptRoot\Scripts"
-$env:PATHEXT += ";.PS1"
+
+# Register local modules for PowerShell's built-in command-driven auto-loading.
+$moduleRoot = Join-Path $PSScriptRoot 'Modules'
+$modulePathSeparator = [System.IO.Path]::PathSeparator
+$modulePaths = $env:PSModulePath -split [regex]::Escape($modulePathSeparator)
+if ($moduleRoot -notin $modulePaths) {
+    $env:PSModulePath = "$moduleRoot$modulePathSeparator$env:PSModulePath"
+}
+
+# Register script commands without duplicating entries when the profile is reloaded.
+$pathEntries = $env:Path -split [regex]::Escape($modulePathSeparator)
+foreach ($pathEntry in @($PSScriptRoot, (Join-Path $PSScriptRoot 'Scripts'))) {
+    if ($pathEntry -notin $pathEntries) {
+        $env:Path = "$env:Path$modulePathSeparator$pathEntry"
+        $pathEntries += $pathEntry
+    }
+}
+
+$pathExtensions = $env:PATHEXT -split ';'
+if ('.PS1' -notin $pathExtensions) {
+    $env:PATHEXT = "$env:PATHEXT;.PS1"
+}
+
+$global:ScriptsPowerShellProfileLoaded = $true

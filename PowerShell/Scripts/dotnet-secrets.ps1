@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    Opens the current .NET project's user-secrets directory.
+.DESCRIPTION
+    Reads UserSecretsId from the project file and resolves its local storage path.
+#>
+
 # dotnet user-secrets list | Out-Null
 
 $projectPath = (Resolve-Path .).Path

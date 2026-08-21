@@ -1,6 +1,9 @@
-#
-# Function to import a module if installed, and install if not installed
-#
+<#
+.SYNOPSIS
+    Defines a helper for loading PowerShell modules.
+.DESCRIPTION
+    Use-Module imports an installed module or installs it for the current user first.
+#>
 
 function Use-Module {
     [CmdletBinding()]
