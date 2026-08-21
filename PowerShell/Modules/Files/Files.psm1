@@ -1,28 +1,20 @@
-function File-Search {
-    param(
-        [string] $Pattern = "*"
-    )
-    
-    Get-ChildItem -Path (Get-Location) -Recurse -Filter $Pattern -File
-}
+$publicRoot = Join-Path $PSScriptRoot 'Public'
+. (Join-Path $publicRoot 'FindFiles.ps1')
+. (Join-Path $publicRoot 'FindModules.ps1')
+. (Join-Path $publicRoot 'Less.ps1')
+. (Join-Path $publicRoot 'Search.ps1')
+. (Join-Path $publicRoot 'Tail.ps1')
+. (Join-Path $publicRoot 'Touch.ps1')
+. (Join-Path $publicRoot 'Unzip.ps1')
 
-function File-Touch {
-    param (
-        [string] $Path
-    )
-
-    # Create the file if it does not exist
-    if (-Not (Test-Path $Path)) {
-        New-Item -ItemType File -Name $Path
-    }
-
-    # Update the timestamps of the file
-    $file = Get-Item $Path
-    $file.LastWriteTime = Get-Date
-    $file.LastAccessTime = Get-Date
-}
-
+Set-Alias -Name find-files -Value Find-File
+Set-Alias -Name find-modules -Value Find-Module
 Set-Alias -Name search -Value File-Search
 Set-Alias -Name touch -Value File-Touch
+Set-Alias -Name less -Value Show-FilePage
+Set-Alias -Name tail -Value Get-FileTail
+Set-Alias -Name unzip -Value Expand-ZipFile
 
-Export-ModuleMember -Function File-Search, File-Touch -Alias search, touch
+Export-ModuleMember `
+    -Function Find-File, Find-Module, File-Search, File-Touch, Show-FilePage, Get-FileTail, Expand-ZipFile `
+    -Alias find-files, find-modules, search, touch, less, tail, unzip

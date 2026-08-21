@@ -24,11 +24,16 @@ $commands = @(
     'config'
     'Docker-StartInteractive'
     'env'
+    'find-files'
+    'find-modules'
     'Git-Zip'
     'git-change-branch'
     'git-delete-branches'
+    'less'
     'search'
+    'tail'
     'touch'
+    'unzip'
     'windows'
 )
 $missingCommands = @($commands | Where-Object { -not (Get-Command $_ -ErrorAction Ignore) })

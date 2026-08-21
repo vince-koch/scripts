@@ -1,7 +1,5 @@
 $moduleRoot = Split-Path $PSScriptRoot -Parent
 $powerShellRoot = Split-Path $moduleRoot -Parent
-Try-Import-Module (Join-Path $moduleRoot 'Git\Git.psm1')
-
 function Update-GitPull {
     Push-Location $powerShellRoot
 

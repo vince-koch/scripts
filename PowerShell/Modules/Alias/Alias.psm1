@@ -1,3 +1,10 @@
+<#
+.SYNOPSIS
+    Provides command and executable alias discovery tools.
+.DESCRIPTION
+    Defines the public commands exported by the Alias module.
+#>
+
 Import-Module (Join-Path (Split-Path $PSScriptRoot -Parent) 'Json\Json.psm1') -DisableNameChecking -ErrorAction Stop
 
 $script:ManifestPath = "$env:USERPROFILE\.aliases.json"
