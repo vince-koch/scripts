@@ -70,3 +70,11 @@ if ('.PS1' -notin $pathExtensions) {
 }
 
 $global:ScriptsPowerShellProfileLoaded = $true
+
+
+function shruggie {
+    $shrug = '¯\_(ツ)_/¯'
+    $shrug | Set-Clipboard
+    Write-Host $shrug -NoNewLine
+    Write-Host " has been copied to the clipboard" -ForegroundColor DarkGray
+}
