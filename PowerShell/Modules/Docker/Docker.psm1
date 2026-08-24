@@ -446,7 +446,7 @@ function Start-Postgres {
     #>
     Docker-StartInteractive `
         -ImageName "postgres" `
-        -DefaultTag "15" `
+        -DefaultTag "18" `
         -DefaultName "postgres-dev" `
         -DefaultPorts @("5432:5432") `
         -DefaultEnvVars @(

@@ -4,6 +4,10 @@
 .DESCRIPTION
     Selects an AWS profile interactively when one is not supplied and invokes the AWS CLI login.
 #>
+
+#Requires -Version 7.4
+#Requires -Modules PwshSpectreConsole
+
 param(
     [Parameter(Mandatory = $false)]
     [string]$Profile
@@ -62,7 +66,8 @@ function Select-AwsProfile
 
     if (-not $profiles)
     {
-        Write-Host "No AWS profiles found."
+        Write-Host "No AWS profiles found." -ForegroundColor Red
+        Write-Host "Please configure AWS profiles using 'aws configure' or by editing ~/.aws"
         exit 1
     }
 
@@ -176,9 +181,7 @@ function Invoke-AwsLogin
     )
 
     # Login to AWS
-    Write-Host ""
-    Write-Host "Logging into profile '$Profile'..." -ForegroundColor Cyan
-    Write-Host ""
+    Write-SpectreHost "🔐 Logging into profile [darkorange]$Profile[/]"
 
     # aws sso login --profile $Profile
     # Assert-Success "AWS SSO Login"
