@@ -84,13 +84,13 @@
     $global:ScriptsPowerShellProfileLoaded = $true
 }
 
-# Windows Terminal shortcuts. The module auto-loads only in its matching host.
-if ($env:WT_SESSION -and (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore)) {
-    Install-WindowsTerminalHotkeys
-}
-
-# Bookmark insertion shortcut. SpectreConsole loads only when the picker is opened.
 if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
+    # Windows Terminal shortcuts. The module auto-loads only in its matching host.
+    if ($env:WT_SESSION) {
+        Install-WindowsTerminalHotkeys
+    }
+
+    # Bookmark insertion shortcut. SpectreConsole loads only when the picker is opened.
     Install-BookmarkHotkeys
 }
 
