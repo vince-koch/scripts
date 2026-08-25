@@ -1,3 +1,11 @@
+<#
+.SYNOPSIS
+    Manages named filesystem bookmarks and bookmark-related shortcuts.
+.DESCRIPTION
+    Provides commands for saving, listing, selecting, and navigating to bookmarks,
+    plus an optional PSReadLine shortcut for inserting a bookmark at the cursor.
+#>
+
 $jsonModulePath = Join-Path (Split-Path $PSScriptRoot -Parent) 'Json\Json.psm1'
 Import-Module $jsonModulePath -DisableNameChecking -ErrorAction Stop
 
@@ -37,23 +45,107 @@ function GoTo-Bookmark {
     }
 }
 
+function Get-Bookmark {
+    <#
+    .SYNOPSIS
+        Returns saved bookmarks as objects containing Name and Path.
+    #>
+    [CmdletBinding()]
+    param()
+
+    if (-not (Test-Path $bookmarkFile)) {
+        return
+    }
+
+    $bookmarks = Json-LoadHashtable -Path $bookmarkFile
+    foreach ($name in ($bookmarks.Keys | Sort-Object)) {
+        [PSCustomObject]@{
+            Name = $name
+            Path = $bookmarks[$name]
+        }
+    }
+}
+
 function List-Bookmarks {
     if (-not (Test-Path $bookmarkFile)) {
         Write-Host "No bookmarks available." -ForegroundColor Yellow
         return
     }
     
-    $bookmarks = Json-LoadHashtable -Path $bookmarkFile
+    Get-Bookmark | Format-Table -AutoSize
+}
 
-    $bookmarks.Keys |
-        Sort-Object |
-        ForEach-Object {
-            [PSCustomObject]@{
-                Name = $_
-                Path = $bookmarks[$_]
+function Select-Bookmark {
+    <#
+    .SYNOPSIS
+        Displays a searchable bookmark picker and returns the selected bookmark.
+    #>
+    [CmdletBinding()]
+    param()
+
+    $bookmarks = @(Get-Bookmark)
+    if ($bookmarks.Count -eq 0) {
+        Write-Host 'No bookmarks available.' -ForegroundColor Yellow
+        return
+    }
+
+    Import-Module PwshSpectreConsole -ErrorAction Stop
+
+    $nameWidth = ($bookmarks.Name | ForEach-Object Length | Measure-Object -Maximum).Maximum
+    $choices = @(foreach ($bookmark in $bookmarks) {
+        '{0}  {1}' -f $bookmark.Name.PadRight($nameWidth), $bookmark.Path
+    })
+
+    $selection = Read-SpectreSelection `
+        -Message 'Insert bookmark' `
+        -Choices $choices `
+        -EnableSearch `
+        -Color 'Cyan1'
+
+    if ($null -eq $selection) { return }
+    $bookmarks[[array]::IndexOf($choices, [string]$selection)]
+}
+
+function Install-BookmarkHotkeys {
+    <#
+    .SYNOPSIS
+        Installs the Ctrl+Alt+B PSReadLine bookmark insertion shortcut.
+    #>
+    [CmdletBinding()]
+    param()
+
+    if (-not (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore)) { return }
+
+    Set-PSReadLineKeyHandler `
+        -Chord 'Ctrl+Alt+b' `
+        -BriefDescription 'InsertBookmark' `
+        -LongDescription 'Select and insert a filesystem bookmark at the cursor' `
+        -ScriptBlock {
+            param($key, $arg)
+
+            try {
+                $bookmark = Select-Bookmark
+                if ($null -eq $bookmark) { return }
+
+                $line = $null
+                $cursor = 0
+                [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
+                $beforeCursor = $line.Substring(0, $cursor)
+
+                $value = if ($beforeCursor -match '(?i)(?:^|[;|&])\s*(?:ccd|bookmark|bookmarks)\s+[^\s]*$') {
+                    [string]$bookmark.Name
+                }
+                else {
+                    [string]$bookmark.Path
+                }
+
+                $quotedValue = "'" + $value.Replace("'", "''") + "'"
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($quotedValue)
             }
-        } |
-        Format-Table -AutoSize
+            catch {
+                [console]::Beep()
+            }
+        }
 }
 
 function Remove-Bookmark {
@@ -136,5 +228,5 @@ function Bookmark {
 New-Alias -Name Bookmarks -Value Bookmark -Force
 New-Alias -Name ccd -Value Bookmark -Force
 
-Export-ModuleMember -Function Bookmark
+Export-ModuleMember -Function Bookmark, Get-Bookmark, Select-Bookmark, Install-BookmarkHotkeys
 Export-ModuleMember -Alias Bookmarks, ccd

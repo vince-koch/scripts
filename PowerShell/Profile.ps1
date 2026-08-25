@@ -89,6 +89,11 @@ if ($env:WT_SESSION -and (Get-Command Set-PSReadLineKeyHandler -ErrorAction Igno
     Install-WindowsTerminalHotkeys
 }
 
+# Bookmark insertion shortcut. SpectreConsole loads only when the picker is opened.
+if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
+    Install-BookmarkHotkeys
+}
+
 function shruggie {
     $shrug = '¯\_(ツ)_/¯'
     $shrug | Set-Clipboard
