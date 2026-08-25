@@ -32,6 +32,7 @@ function Show-WindowsTools {
     Import-Module PwshSpectreConsole -ErrorAction Stop
     while ($true) {
         $action = Read-SpectreSelection -Message 'Windows tools' -Choices @('Theme', 'Display resolution', 'Exit') -Color 'Cyan1'
+        if (-not $action) { return }
         switch ($action) {
             'Theme' {
                 $selectedTheme = Read-SpectreSelection -Message 'Select a Windows theme' -Choices @('Light', 'Dark', 'Toggle') -Color 'Cyan1'

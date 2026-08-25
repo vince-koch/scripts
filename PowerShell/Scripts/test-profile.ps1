@@ -17,7 +17,7 @@ $watch = [System.Diagnostics.Stopwatch]::StartNew()
 . $profilePath
 $watch.Stop()
 
-$moduleNames = @('Bookmark', 'Config', 'Docker', 'DotNet', 'Environment', 'Files', 'Git', 'Nvm', 'VisualStudio', 'Windows')
+$moduleNames = @('Bookmark', 'Config', 'Docker', 'DotNet', 'Environment', 'Files', 'Git', 'Nvm', 'VisualStudio', 'Windows', 'WindowsTerminal')
 $modulesLoadedAtStart = @($moduleNames | Where-Object { Get-Module -Name $_ })
 $commands = @(
     'ccd'
@@ -39,6 +39,7 @@ $commands = @(
     'unzip'
     'vs'
     'windows'
+    'winterm'
 )
 $missingCommands = @($commands | Where-Object { -not (Get-Command $_ -ErrorAction Ignore) })
 $modulesLoadedAfterLookup = @($moduleNames | Where-Object { Get-Module -Name $_ })
@@ -86,7 +87,7 @@ $checks.GetEnumerator() | ForEach-Object {
 
 $passed = $result.CommandsFound -and
     ($result.ModulesAtStartup -eq 0) -and
-    ($result.ModulesAfterLookup -eq 10) -and
+    ($result.ModulesAfterLookup -eq 11) -and
     ($result.ProfilePathCopies -eq 1) -and
     ($result.ScriptPathCopies -eq 1)
 

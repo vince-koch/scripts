@@ -269,6 +269,9 @@ else
 {
     # No profile provided - show selection menu
     $selectedProfile = Select-AwsProfile
+    if (-not $selectedProfile) {
+        return
+    }
 }
 
 # Execute login

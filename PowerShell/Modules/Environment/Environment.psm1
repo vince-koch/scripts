@@ -175,6 +175,7 @@ function Show-Environment {
     Import-Module PwshSpectreConsole -ErrorAction Stop
     while ($true) {
         $action = Read-SpectreSelection -Message 'Environment variables' -Choices @('List', 'List PATH entries', 'Get', 'Set', 'Unset', 'Exit') -Color 'Cyan1'
+        if (-not $action) { return }
         switch ($action) {
             'List' { Environment-List }
             'List PATH entries' { Environment-PathList }
@@ -193,7 +194,9 @@ function Show-Environment {
                     $textParameters = @{ Message = 'Variable value'; AllowEmpty = $true }
                     if ($null -ne $currentValue) { $textParameters.DefaultAnswer = $currentValue }
                     $selectedValue = Read-SpectreText @textParameters
-                    Environment-Set -Name $selectedName -Value $selectedValue
+                    if ($null -ne $selectedValue) {
+                        Environment-Set -Name $selectedName -Value $selectedValue
+                    }
                 }
             }
             'Unset' {
