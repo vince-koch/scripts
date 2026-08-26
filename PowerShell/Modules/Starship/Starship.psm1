@@ -1,16 +1,18 @@
 <#
 .SYNOPSIS
-    Enables and configures the Starship prompt.
+    Provides Starship prompt preset selection.
 .DESCRIPTION
-    Initializes Starship and provides commands for selecting a saved prompt preset.
+    Commands for selecting a saved Starship prompt preset from the bundled Assets/Presets folder.
 #>
 
-function global:Starship-Use-Preset {
+$script:StarshipPresetsPath = Join-Path $PSScriptRoot 'Assets\Presets'
+
+function Starship-Use-Preset {
     param (
         [string] $Preset = $null
     )
 
-    [string] $presetFolder = [System.IO.Path]::Combine($PSScriptRoot, '..', 'Resources', 'Starship-Presets', 'toml')
+    [string] $presetFolder = $script:StarshipPresetsPath
 
     if ([string]::IsNullOrWhiteSpace($Preset)) {
         Import-Module PwshSpectreConsole -ErrorAction Stop
@@ -44,10 +46,8 @@ function global:Starship-Use-Preset {
     }
 }
 
-function global:Use-Starship-Preset {
+function Use-Starship-Preset {
     Starship-Use-Preset
 }
 
-# initialize starship
-$env:STARSHIP_CONFIG = [Environment]::GetEnvironmentVariable("STARSHIP_CONFIG", "User")
-Invoke-Expression (&starship init powershell)
+Export-ModuleMember -Function Starship-Use-Preset, Use-Starship-Preset

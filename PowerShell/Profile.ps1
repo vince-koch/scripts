@@ -94,6 +94,21 @@ if (Get-Command Set-PSReadLineKeyHandler -ErrorAction Ignore) {
     Install-BookmarkHotkeys
 }
 
+if (Get-Command starship -ErrorAction Ignore) {
+    $starshipConfig = [Environment]::GetEnvironmentVariable('STARSHIP_CONFIG', 'User')
+    if ($starshipConfig -and -not (Test-Path -LiteralPath $starshipConfig)) {
+        $relocated = Join-Path $PSScriptRoot "Modules\Starship\Assets\Presets\$([IO.Path]::GetFileName($starshipConfig))"
+        if (Test-Path -LiteralPath $relocated) {
+            $starshipConfig = $relocated
+            [Environment]::SetEnvironmentVariable('STARSHIP_CONFIG', $starshipConfig, 'User')
+        }
+    }
+    if ($starshipConfig -and (Test-Path -LiteralPath $starshipConfig)) {
+        $env:STARSHIP_CONFIG = $starshipConfig
+    }
+    Invoke-Expression (&starship init powershell)
+}
+
 function shruggie {
     $shrug = '¯\_(ツ)_/¯'
     $shrug | Set-Clipboard
