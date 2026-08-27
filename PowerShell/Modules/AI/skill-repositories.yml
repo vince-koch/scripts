@@ -1,0 +1,14 @@
+version: 1
+
+repositories:
+  - name: maxedapps
+    url: https://github.com/maxedapps/agent-skills.git
+
+  - name: mattpocock
+    url: https://github.com/mattpocock/skills.git
+
+  # - name: clarishealth-etl
+  #   url: file://c:/temp/clarishealth-etl-agent-skills/
+
+  # - name: vince
+  #   url: file://c:/temp/vince-agent-skills/
