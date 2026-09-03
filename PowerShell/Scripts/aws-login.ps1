@@ -167,6 +167,45 @@ function Invoke-AwsCliWithSsoRetry
 }
 
 
+function Get-NuGetSourceNameByUrl
+{
+    <#
+    .SYNOPSIS
+    Resolves a NuGet source name from nuget.config by matching the source URL.
+    .PARAMETER SourceUrl
+    The package source URL to match.
+    .PARAMETER ConfigPath
+    Path to nuget.config. Defaults to the user-level config.
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourceUrl,
+
+        [Parameter(Mandatory = $false)]
+        [string]$ConfigPath = (Join-Path $env:APPDATA "NuGet\NuGet.Config")
+    )
+
+    if (-not (Test-Path $ConfigPath))
+    {
+        throw "NuGet config not found at '$ConfigPath'."
+    }
+
+    [xml]$config = Get-Content -Path $ConfigPath
+    $normalizedUrl = $SourceUrl.TrimEnd("/")
+
+    $match = $config.configuration.packageSources.add |
+        Where-Object { $_.value -and ($_.value.TrimEnd("/") -ieq $normalizedUrl) } |
+        Select-Object -First 1
+
+    if (-not $match)
+    {
+        throw "No NuGet source in '$ConfigPath' matches URL '$SourceUrl'."
+    }
+
+    return $match.key
+}
+
+
 function Invoke-AwsLogin
 {
     <#
@@ -235,8 +274,8 @@ function Invoke-AwsLogin
                     --format nuget
             }
 
-        $sourceName = "CodeArtifact"
         $sourceUrl = $endpoint.TrimEnd("/") + "/v3/index.json"
+        $sourceName = Get-NuGetSourceNameByUrl -SourceUrl $sourceUrl
 
         # Update Nuget source with new token (remove old source first to avoid duplicate errors)
         dotnet nuget remove source $sourceName 2>$null
