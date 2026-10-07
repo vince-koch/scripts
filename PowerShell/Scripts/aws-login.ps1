@@ -202,6 +202,9 @@ function Get-NuGetSourceNameByUrl
         throw "No NuGet source in '$ConfigPath' matches URL '$SourceUrl'."
     }
 
+    Write-Host "✔  Nuget source name found: " -ForegroundColor Green -NoNewLine
+    Write-Host "$($match.key)" -ForegroundColor DarkGray
+
     return $match.key
 }
 

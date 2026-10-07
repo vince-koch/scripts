@@ -115,3 +115,5 @@ function shruggie {
     Write-Host $shrug -NoNewLine
     Write-Host " has been copied to the clipboard" -ForegroundColor DarkGray
 }
+
+Enable-CdCompletion
