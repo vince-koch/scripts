@@ -1,9 +1,16 @@
-function Enable-CdCompletion {
+function Enable-DirectoryCompletion {
     param(
         [int]$MaxDepth = 5
     )
 
-    Register-ArgumentCompleter -CommandName cd, Set-Location -ParameterName Path -ScriptBlock {
+    $commands = @(
+        'cd',
+        'Set-Location',
+        'pushd',
+        'Push-Location'
+    )
+
+    Register-ArgumentCompleter -CommandName $commands -ParameterName Path -ScriptBlock {
         param(
             $commandName,
             $parameterName,
@@ -89,5 +96,3 @@ function Enable-CdCompletion {
             }
     }.GetNewClosure()
 }
-
-Export-ModuleMember -Function Enable-CdCompletion

@@ -116,4 +116,4 @@ function shruggie {
     Write-Host " has been copied to the clipboard" -ForegroundColor DarkGray
 }
 
-Enable-CdCompletion
+Enable-DirectoryCompletion
