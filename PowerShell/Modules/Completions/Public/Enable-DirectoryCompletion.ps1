@@ -39,7 +39,8 @@ function Enable-DirectoryCompletion {
 
         # Breadth-first so shallow matches are found before the time budget runs out
         $queue = [System.Collections.Generic.Queue[object]]::new()
-        $queue.Enqueue(@((Get-Location).ProviderPath, 0))
+        $root = (Get-Location).ProviderPath
+        $queue.Enqueue(@($root, 0))
 
         while ($queue.Count -gt 0 -and $results.Count -lt $maxResults -and [DateTime]::UtcNow -lt $deadline) {
             $item = $queue.Dequeue()
@@ -85,7 +86,9 @@ function Enable-DirectoryCompletion {
             } |
             ForEach-Object {
 
-                $text = if ($_.Name -match '\s') { "'$($_.Name)'" } else { $_.Name }
+                # Insert the path relative to the current location so nested matches are navigable
+                $relative = [System.IO.Path]::GetRelativePath($root, $_.FullName)
+                $text = if ($relative -match '\s') { "'$($relative -replace "'", "''")'" } else { $relative }
 
                 [System.Management.Automation.CompletionResult]::new(
                     $text,

@@ -278,12 +278,15 @@ function Invoke-AwsLogin
             }
 
         $sourceUrl = $endpoint.TrimEnd("/") + "/v3/index.json"
-        $sourceName = Get-NuGetSourceNameByUrl -SourceUrl $sourceUrl
+        $nugetConfigPath = Join-Path $env:APPDATA "NuGet\NuGet.Config"
+        $sourceName = Get-NuGetSourceNameByUrl -SourceUrl $sourceUrl -ConfigPath $nugetConfigPath
 
-        # Update Nuget source with new token (remove old source first to avoid duplicate errors)
-        dotnet nuget remove source $sourceName 2>$null
+        # Target the same config the source was found in; otherwise dotnet resolves
+        # a different config (e.g. from the current directory) and can't find/remove it.
+        dotnet nuget remove source $sourceName --configfile $nugetConfigPath | Out-Null
 
         dotnet nuget add source $sourceUrl `
+            --configfile $nugetConfigPath `
             --name $sourceName `
             --username aws `
             --password $token `
