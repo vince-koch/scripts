@@ -2,6 +2,7 @@
 #     dotnet tool install -g Amazon.Lambda.Tools
 #     Install-Module AWS.Tools.Installer -Scope CurrentUser # Install the installer if not already installed
 #     Install-AWSToolsModule AWS.Tools.Common, AWS.Tools.SecurityToken, AWS.Tools.Lambda -CleanUp # Install all required modules in one shot
+#     Install-Module PwshSpectreConsole -Scope CurrentUser
 #
 # Other useful things
 #     Update-AWSToolsModule AWS.Tools.Common, AWS.Tools.SecurityToken, AWS.Tools.Lambda -CleanUp
@@ -9,11 +10,11 @@
 
 if ($PsVersionTable.PSVersion -lt [version]"7.0") {
     Write-Host "Use PowerShell Core 7+ you silly sausage!" -ForegroundColor Yellow
-    return
+    exit 1
 }
 
 $ErrorActionPreference = 'Stop'
-$scriptVersion = "1.6"
+$scriptVersion = "1.7"
 
 
 Import-Module AWS.Tools.Common
@@ -388,8 +389,7 @@ function Ensure-AwsProfile {
 
     # otherwise lets give them a menu
     while ($selectedProfile -eq $null) {
-        Write-Host "AWS Profiles" -ForegroundColor Cyan
-        $p = Select-ItemByProperty -Items $profiles -LabelPropertyName "ProfileName" -Message "AWS profile"
+        $p = Select-ItemByProperty -Items $profiles -LabelPropertyName "ProfileName" -Message "Select [cyan]AWS Profile[/]"
 
         # If this is an SSO profile, ensure a fresh login:
         Invoke-AWSSSOLogin -ProfileName $p.ProfileName       # opens browser if needed
@@ -407,7 +407,9 @@ function Ensure-AwsProfile {
     }
 
     # Make the profile/region the default for this PS session:
-    Initialize-AWSDefaultConfiguration -ProfileName $selectedProfile.ProfileName -Region $region
+    #Initialize-AWSDefaultConfiguration -ProfileName $selectedProfile.ProfileName -Region $region
+    Set-AWSCredential -ProfileName $selectedProfile.ProfileName
+    Set-DefaultAWSRegion -Region $region
 
     return $selectedProfile
 }
@@ -445,7 +447,7 @@ function Main {
 
     # where are we deploying to
     Write-Host "Deployment Targets" -ForegroundColor Cyan
-    $selectedTargets = Select-MultipleItemsByProperty -Items $($configFile.DeploymentTargets) -LabelPropertyName "Label" -Message "Deployment targets (space to toggle, enter to confirm)"
+    $selectedTargets = Select-MultipleItemsByProperty -Items $($configFile.DeploymentTargets) -LabelPropertyName "Label" -Message "Select [cyan]Deployment targets[/]"
 
     $results = @()
     foreach ($selectedTarget in $selectedTargets) {
@@ -463,6 +465,7 @@ function Main {
             Lambda-SetFunctionHandler -FunctionName $selectedTarget.LambdaName -FunctionHandler $configFile.Lambda.FunctionHandler -ProfileName $selectedProfile.ProfileName -Region $region
             Lambda-SetTimeoutInSeconds -FunctionName $selectedTarget.LambdaName -TimeoutInSeconds $configFile.Lambda.FunctionTimeoutSeconds -ProfileName $selectedProfile.ProfileName -Region $region
             Lambda-SetEnvironmentVariables -FunctionName $selectedTarget.LambdaName -EnvironmentVariables $selectedTarget.EnvironmentVariables -ProfileName $selectedProfile.ProfileName -Region $region
+            Lambda-WaitForReady -FunctionName $selectedTarget.LambdaName -ProfileName $selectedProfile.ProfileName -Region $region
             $results += [pscustomobject]@{ Target = $selectedTarget.Label; Status = "OK"; Error = "" }
         }
         catch {
